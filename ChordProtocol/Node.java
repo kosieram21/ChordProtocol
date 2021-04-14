@@ -3,6 +3,29 @@ package ChordProtocol;
 import java.rmi.RemoteException;
 
 public class Node implements INode {
+    static class Finger {
+        private int _start;
+        private String _nodeURL;
+        private int _nodeId;
+
+        public int getStart() { return _start; }
+        public void setStart(int start) { _start = start; }
+
+        public String getNodeURL() { return _nodeURL; }
+        public void setNodeURL(String nodeURL) { _nodeURL = nodeURL; }
+
+        public int getNodeId() { return _nodeId; }
+        public void setNodeId(int nodeId) { _nodeId = nodeId; }
+    }
+
+    private int _m;
+    private String _nodeURL;
+    private String _successorURL;
+    private String _predecessorURL;
+    private Finger[] _fingers;
+
+    // TODO: need constructor
+
     @Override
     public String findSuccessor(int key, boolean traceFlag) throws RemoteException {
         return null; // Shane implement
@@ -19,13 +42,28 @@ public class Node implements INode {
     }
 
     @Override
-    public String successor() throws RemoteException {
-        return null;
+    public int getNodeId() throws RemoteException {
+        return 0; // TODO: implement
     }
 
     @Override
-    public String predecessor() throws RemoteException {
-        return null;
+    public String getSuccessorURL() throws RemoteException {
+        return _successorURL;
+    }
+
+    @Override
+    public void setSuccessorURL(String successorURL) throws RemoteException {
+        _successorURL = successorURL;
+    }
+
+    @Override
+    public String getPredecessorURL() throws RemoteException {
+        return _predecessorURL;
+    }
+
+    @Override
+    public void setPredecessorURL(String predecessorURL) throws RemoteException {
+        _predecessorURL = predecessorURL;
     }
 
     @Override
@@ -36,15 +74,31 @@ public class Node implements INode {
         if(nPrime != null) {
             init_finger_table(nPrime);
             update_others();
-            return false;
         }
         else {
-            return true;
+            for(int i = 1; i <= _m; i++)
+                _fingers[i].setNodeURL(_nodeURL);
+            _predecessorURL = _nodeURL;
         }
+
+        return true; // return false if we can't find node URL?
     }
 
-    private void init_finger_table(INode nPrime) {
+    private void init_finger_table(INode nPrime) throws RemoteException {
+        _fingers[1].setNodeURL(nPrime.findSuccessor(_fingers[1].getStart(), false)); // TODO: what to do about trace flag?
 
+        String successorURL = nPrime.getSuccessorURL();
+        INode successor = null; // TODO: use successor URL to get INode successor
+        _predecessorURL = successor.getPredecessorURL();
+        successor.setPredecessorURL(_nodeURL);
+
+        for(int i = 1; i < _m; i++) {
+            if( getNodeId() < _fingers[i + 1].getStart() &&
+                _fingers[i + 1].getStart() <= _fingers[i + 1].getNodeId())
+                _fingers[i + 1].setNodeURL(_fingers[i].getNodeURL());
+            else
+                _fingers[i + 1].setNodeURL(nPrime.findSuccessor(_fingers[i + 1].getStart(), false)); // TODO: what to do about trace flag/
+        }
     }
 
     private void update_others() {
