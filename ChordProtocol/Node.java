@@ -72,8 +72,8 @@ public class Node implements INode {
         // nodeURL should point to peer 0 which will act as look manage
         INode nPrime = null;
         if(nPrime != null) {
-            init_finger_table(nPrime);
-            update_others();
+            initFingerTable(nPrime);
+            updateOthers();
         }
         else {
             for(int i = 1; i <= _m; i++)
@@ -84,7 +84,7 @@ public class Node implements INode {
         return true; // return false if we can't find node URL?
     }
 
-    private void init_finger_table(INode nPrime) throws RemoteException {
+    private void initFingerTable(INode nPrime) throws RemoteException {
         _fingers[1].setNodeURL(nPrime.findSuccessor(_fingers[1].getStart(), false)); // TODO: what to do about trace flag?
 
         String successorURL = nPrime.getSuccessorURL();
@@ -101,8 +101,24 @@ public class Node implements INode {
         }
     }
 
-    private void update_others() {
+    private void updateOthers() throws RemoteException {
+        for(int i = 1; i <= _m; i++) {
+            String predecessorURL = findPredecessor((int)(getNodeId() - (Math.pow(2, i) + 1)));
+            INode predecessor = null; // TODO: Use predecessor URL to get predecessor
+            predecessor.updateFingerTable(getNodeId(), i);
+        }
+    }
 
+    @Override
+    public void updateFingerTable(int s, int i) throws RemoteException {
+        if( _fingers[i].getStart() <= s &&
+            s <= _fingers[i].getNodeId()) {
+            _fingers[i].setNodeId(s); // TODO: nodes are identified with ids and URLs. This needs to be rectified. node id is needed for algorithm inequalities
+
+            String predecessorURL = getPredecessorURL();
+            INode predecessor = null; // TODO: Use predecessor URL to get predecessor
+            predecessor.updateFingerTable(s, i);
+        }
     }
 
     @Override

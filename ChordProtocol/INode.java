@@ -18,6 +18,8 @@ public interface INode extends Remote {
     boolean join(String nodeURL) throws RemoteException;
     boolean joinFinished(String nodeURL) throws RemoteException;
 
+    void updateFingerTable(int s, int i) throws RemoteException;
+
     boolean insert(String word, String definition) throws RemoteException;
     String lookup(String word) throws RemoteException;
 
