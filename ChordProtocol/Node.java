@@ -34,11 +34,21 @@ public class Node implements INode {
         // nodeURL should point to peer 0 which will act as look manage
         INode nPrime = null;
         if(nPrime != null) {
-            return true;
-        }
-        else {
+            init_finger_table(nPrime);
+            update_others();
             return false;
         }
+        else {
+            return true;
+        }
+    }
+
+    private void init_finger_table(INode nPrime) {
+
+    }
+
+    private void update_others() {
+
     }
 
     @Override
