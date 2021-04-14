@@ -30,11 +30,20 @@ public class Node implements INode {
 
     @Override
     public boolean join(String nodeURL) throws RemoteException {
-        return false;
+        // use node url to get INode peer
+        // nodeURL should point to peer 0 which will act as look manage
+        INode nPrime = null;
+        if(nPrime != null) {
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     @Override
     public boolean joinFinished(String nodeURL) throws RemoteException {
+        // tell nodeURL (should be peer 0) to release the join lock
         return false;
     }
 
