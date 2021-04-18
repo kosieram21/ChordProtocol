@@ -1,8 +1,15 @@
 package ChordProtocol;
 
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.UnknownHostException;
+import java.rmi.AlreadyBoundException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
+import java.rmi.registry.LocateRegistry;
+import java.rmi.registry.Registry;
+import java.rmi.server.UnicastRemoteObject;
 
 public class Node implements INode {
     static class Finger {
@@ -20,44 +27,47 @@ public class Node implements INode {
         public void setNodeId(int nodeId) { _nodeId = nodeId; }
     }
 
+    public static String SERVICE_NAME = "Chord";
+
     private final int _nodeId;
     private final String _nodeURL;
     private final int _m;
+    private final int _port;
 
     private String _successorURL;
     private String _predecessorURL;
     private Finger[] _fingers;
 
-    // TODO: need constructor
-
-    public Node(int nodeId, int m) throws UnknownHostException {
+    public Node(int nodeId, int m, int port) throws UnknownHostException {
         _nodeId = nodeId;
         _nodeURL = InetAddress.getLocalHost().getHostName();
         _m = m;
+        _port = port;
+        _fingers = new Finger[m + 1];
     }
 
     @Override
-    public String findSuccessor(int key) throws RemoteException {
+    public String findSuccessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
         String nPrimeURL = findPredecessor(key);
-        INode nPrime = null; // getNode(nPrimeURL);
+        INode nPrime = getNode(nPrimeURL);
         return nPrime.getSuccessorURL();
     }
 
     @Override
-    public String findPredecessor(int key) throws RemoteException {
+    public String findPredecessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
         String nPrimeURL = _nodeURL;
-        INode nPrime = null; // getNode(nPrimeURL);
+        INode nPrime = getNode(nPrimeURL);
 
         String nPrimeSuccessorURL = nPrime.getSuccessorURL();
-        INode nPrimeSuccessor = null; // getNode(nPrimeSuccessor)
+        INode nPrimeSuccessor = getNode(nPrimeSuccessorURL);
         while ( !(nPrime.getNodeId() < key &&
                   nPrimeSuccessor.getNodeId() >= key)) {
 
             nPrimeURL = nPrime.closestPrecedingFinger(key);
-            nPrime = null; // getNode(nPrimeURL);
+            nPrime = getNode(nPrimeURL);
 
             nPrimeSuccessorURL = nPrime.getSuccessorURL();
-            nPrimeSuccessor = null; // getNode(nPrimeSuccessor)
+            nPrimeSuccessor = getNode(nPrimeSuccessorURL);
         }
 
         return nPrimeURL;
@@ -101,10 +111,10 @@ public class Node implements INode {
     }
 
     @Override
-    public boolean join(String nodeURL) throws RemoteException {
+    public boolean join(String nodeURL) throws RemoteException, MalformedURLException, NotBoundException {
         // use node url to get INode peer
         // nodeURL should point to peer 0 which will act as look manage
-        INode nPrime = null;
+        INode nPrime = getNode(nodeURL);
         if(nPrime != null) {
             initFingerTable(nPrime);
             updateOthers();
@@ -118,11 +128,11 @@ public class Node implements INode {
         return true; // return false if we can't find node URL?
     }
 
-    private void initFingerTable(INode nPrime) throws RemoteException {
+    private void initFingerTable(INode nPrime) throws RemoteException, MalformedURLException, NotBoundException {
         _fingers[1].setNodeURL(nPrime.findSuccessor( _fingers[1].getStart() ));
 
         String successorURL = nPrime.getSuccessorURL();
-        INode successor = null; // TODO: use successor URL to get INode successor
+        INode successor = getNode(successorURL);
         _predecessorURL = successor.getPredecessorURL();
         successor.setPredecessorURL(_nodeURL);
 
@@ -135,22 +145,22 @@ public class Node implements INode {
         }
     }
 
-    private void updateOthers() throws RemoteException {
+    private void updateOthers() throws RemoteException, MalformedURLException, NotBoundException {
         for(int i = 1; i <= _m; i++) {
             String predecessorURL = findPredecessor((int)(getNodeId() - (Math.pow(2, i) + 1)));
-            INode predecessor = null; // TODO: Use predecessor URL to get predecessor
+            INode predecessor = getNode(predecessorURL);
             predecessor.updateFingerTable(getNodeId(), i);
         }
     }
 
     @Override
-    public void updateFingerTable(int s, int i) throws RemoteException {
+    public void updateFingerTable(int s, int i) throws RemoteException, MalformedURLException, NotBoundException {
         if( _fingers[i].getStart() <= s &&
             s <= _fingers[i].getNodeId()) {
             _fingers[i].setNodeId(s); // TODO: nodes are identified with ids and URLs. This needs to be rectified. node id is needed for algorithm inequalities
 
             String predecessorURL = getPredecessorURL();
-            INode predecessor = null; // TODO: Use predecessor URL to get predecessor
+            INode predecessor = getNode(predecessorURL);
             predecessor.updateFingerTable(s, i);
         }
     }
@@ -181,9 +191,28 @@ public class Node implements INode {
         return null;
     }
 
-    public static void main(String[] args) {
-        if(args.length != 2) throw new RuntimeException("Syntax: Server node-id m");
+    private INode getNode(String nodeURL) throws RemoteException, NotBoundException, MalformedURLException {
+        String service_name = String.format("//%s:%d/%s", nodeURL, _port, SERVICE_NAME);
+        return (INode) Naming.lookup(service_name);
+    }
+
+    public static void main(String[] args) throws UnknownHostException, RemoteException, AlreadyBoundException {
+        if(args.length != 3) throw new RuntimeException("Syntax: Server node-id m port");
         final int node_id = Integer.parseInt(args[0]);
         final int m = Integer.parseInt(args[1]);
+        final int port = Integer.parseInt(args[2]);
+
+        Node node = new Node(node_id, m, port);
+        INode stub = (INode) UnicastRemoteObject.exportObject(node, 0);
+
+        Registry registry;
+        try {
+            LocateRegistry.createRegistry(port);
+            registry = LocateRegistry.getRegistry(port);
+        }
+        catch (RemoteException e) {
+            registry = LocateRegistry.getRegistry(port);
+        }
+        registry.bind(SERVICE_NAME, stub);
     }
 }

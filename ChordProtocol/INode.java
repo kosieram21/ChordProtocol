@@ -1,11 +1,13 @@
 package ChordProtocol;
 
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface INode extends Remote {
-    String findSuccessor(int key) throws RemoteException;
-    String findPredecessor(int key) throws RemoteException;
+    String findSuccessor(int key) throws RemoteException, MalformedURLException, NotBoundException;
+    String findPredecessor(int key) throws RemoteException, MalformedURLException, NotBoundException;
     String closestPrecedingFinger(int key) throws RemoteException;
 
     int getNodeId() throws RemoteException;
@@ -15,10 +17,10 @@ public interface INode extends Remote {
     String getPredecessorURL() throws RemoteException;
     void setPredecessorURL(String predecessorURL) throws RemoteException;
 
-    boolean join(String nodeURL) throws RemoteException;
+    boolean join(String nodeURL) throws RemoteException, MalformedURLException, NotBoundException;
     boolean joinFinished(String nodeURL) throws RemoteException;
 
-    void updateFingerTable(int s, int i) throws RemoteException;
+    void updateFingerTable(int s, int i) throws RemoteException, MalformedURLException, NotBoundException;
 
     boolean insert(String word, String definition) throws RemoteException;
     String lookup(String word) throws RemoteException;
