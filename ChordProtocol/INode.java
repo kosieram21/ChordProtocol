@@ -4,7 +4,7 @@ import java.rmi.Remote;
 import java.rmi.RemoteException;
 
 public interface INode extends Remote {
-    String findSuccessor(int key, boolean traceFlag) throws RemoteException;
+    String findSuccessor(int key) throws RemoteException;
     String findPredecessor(int key) throws RemoteException;
     String closestPrecedingFinger(int key) throws RemoteException;
 

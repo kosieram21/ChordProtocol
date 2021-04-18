@@ -37,18 +37,42 @@ public class Node implements INode {
     }
 
     @Override
-    public String findSuccessor(int key, boolean traceFlag) throws RemoteException {
-        return null; // Shane implement
+    public String findSuccessor(int key) throws RemoteException {
+        String nPrimeURL = findPredecessor(key);
+        INode nPrime = null; // getNode(nPrimeURL);
+        return nPrime.getSuccessorURL();
     }
 
     @Override
     public String findPredecessor(int key) throws RemoteException {
-        return null; // Shane implement
+        String nPrimeURL = _nodeURL;
+        INode nPrime = null; // getNode(nPrimeURL);
+
+        String nPrimeSuccessorURL = nPrime.getSuccessorURL();
+        INode nPrimeSuccessor = null; // getNode(nPrimeSuccessor)
+        while ( !(nPrime.getNodeId() < key &&
+                  nPrimeSuccessor.getNodeId() >= key)) {
+
+            nPrimeURL = nPrime.closestPrecedingFinger(key);
+            nPrime = null; // getNode(nPrimeURL);
+
+            nPrimeSuccessorURL = nPrime.getSuccessorURL();
+            nPrimeSuccessor = null; // getNode(nPrimeSuccessor)
+        }
+
+        return nPrimeURL;
     }
 
     @Override
     public String closestPrecedingFinger(int key) throws RemoteException {
-        return null; // Shane implement
+        int thisNodeID = getNodeId();
+        for (int i = _m; i >= 1; i--) {
+            int nodeID = _fingers[i].getNodeId();
+            if (nodeID > thisNodeID && nodeID < key)
+                return _fingers[i].getNodeURL();
+        }
+
+        return _nodeURL;
     }
 
     @Override
@@ -95,7 +119,7 @@ public class Node implements INode {
     }
 
     private void initFingerTable(INode nPrime) throws RemoteException {
-        _fingers[1].setNodeURL(nPrime.findSuccessor(_fingers[1].getStart(), false)); // TODO: what to do about trace flag?
+        _fingers[1].setNodeURL(nPrime.findSuccessor( _fingers[1].getStart() ));
 
         String successorURL = nPrime.getSuccessorURL();
         INode successor = null; // TODO: use successor URL to get INode successor
@@ -107,7 +131,7 @@ public class Node implements INode {
                 _fingers[i + 1].getStart() <= _fingers[i + 1].getNodeId())
                 _fingers[i + 1].setNodeURL(_fingers[i].getNodeURL());
             else
-                _fingers[i + 1].setNodeURL(nPrime.findSuccessor(_fingers[i + 1].getStart(), false)); // TODO: what to do about trace flag/
+                _fingers[i + 1].setNodeURL(nPrime.findSuccessor( _fingers[i + 1].getStart() ));
         }
     }
 
