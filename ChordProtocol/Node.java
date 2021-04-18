@@ -1,5 +1,7 @@
 package ChordProtocol;
 
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.rmi.RemoteException;
 
 public class Node implements INode {
@@ -18,13 +20,21 @@ public class Node implements INode {
         public void setNodeId(int nodeId) { _nodeId = nodeId; }
     }
 
-    private int _m;
-    private String _nodeURL;
+    private final int _nodeId;
+    private final String _nodeURL;
+    private final int _m;
+
     private String _successorURL;
     private String _predecessorURL;
     private Finger[] _fingers;
 
     // TODO: need constructor
+
+    public Node(int nodeId, int m) throws UnknownHostException {
+        _nodeId = nodeId;
+        _nodeURL = InetAddress.getLocalHost().getHostName();
+        _m = m;
+    }
 
     @Override
     public String findSuccessor(int key, boolean traceFlag) throws RemoteException {
@@ -43,7 +53,7 @@ public class Node implements INode {
 
     @Override
     public int getNodeId() throws RemoteException {
-        return 0; // TODO: implement
+        return _nodeId;
     }
 
     @Override
@@ -145,5 +155,11 @@ public class Node implements INode {
     @Override
     public String printDictionary() throws RemoteException {
         return null;
+    }
+
+    public static void main(String[] args) {
+        if(args.length != 2) throw new RuntimeException("Syntax: Server node-id m");
+        final int node_id = Integer.parseInt(args[0]);
+        final int m = Integer.parseInt(args[1]);
     }
 }
