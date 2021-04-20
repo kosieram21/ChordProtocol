@@ -17,10 +17,10 @@ public interface INode extends Remote {
     String getPredecessorURL() throws RemoteException;
     void setPredecessorURL(String predecessorURL) throws RemoteException;
 
-    boolean join(String nodeURL) throws RemoteException, MalformedURLException, NotBoundException;
-    boolean joinFinished(String nodeURL) throws RemoteException;
+    void join(String nodeURL) throws RemoteException, MalformedURLException, NotBoundException;
+    void joinFinished(String nodeURL) throws RemoteException;
 
-    void updateFingerTable(int s, int i) throws RemoteException, MalformedURLException, NotBoundException;
+    void updateFingerTable(String url, int s, int i) throws RemoteException, MalformedURLException, NotBoundException;
 
     boolean insert(String word, String definition) throws RemoteException;
     String lookup(String word) throws RemoteException;

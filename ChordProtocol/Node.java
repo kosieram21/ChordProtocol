@@ -13,12 +13,8 @@ import java.rmi.server.UnicastRemoteObject;
 
 public class Node implements INode {
     static class Finger {
-        private int _start;
         private String _nodeURL;
         private int _nodeId;
-
-        public int getStart() { return _start; }
-        public void setStart(int start) { _start = start; }
 
         public String getNodeURL() { return _nodeURL; }
         public void setNodeURL(String nodeURL) { _nodeURL = nodeURL; }
@@ -111,11 +107,11 @@ public class Node implements INode {
     }
 
     @Override
-    public boolean join(String nodeURL) throws RemoteException, MalformedURLException, NotBoundException {
+    public void join(String nodeURL) throws RemoteException, MalformedURLException, NotBoundException {
         // use node url to get INode peer
         // nodeURL should point to peer 0 which will act as look manage
-        INode nPrime = getNode(nodeURL);
-        if(nPrime != null) {
+        if(!nodeURL.equals("")) {
+            INode nPrime = getNode(nodeURL);
             initFingerTable(nPrime);
             updateOthers();
         }
@@ -124,12 +120,13 @@ public class Node implements INode {
                 _fingers[i].setNodeURL(_nodeURL);
             _predecessorURL = _nodeURL;
         }
-
-        return true; // return false if we can't find node URL?
     }
 
     private void initFingerTable(INode nPrime) throws RemoteException, MalformedURLException, NotBoundException {
-        _fingers[1].setNodeURL(nPrime.findSuccessor( _fingers[1].getStart() ));
+        String finger1NodeURL = nPrime.findSuccessor(getFingerStart(1));
+        INode finger1Node = getNode(finger1NodeURL);
+        _fingers[1].setNodeURL(finger1NodeURL);
+        _fingers[1].setNodeId(finger1Node.getNodeId());
 
         String successorURL = nPrime.getSuccessorURL();
         INode successor = getNode(successorURL);
@@ -137,11 +134,18 @@ public class Node implements INode {
         successor.setPredecessorURL(_nodeURL);
 
         for(int i = 1; i < _m; i++) {
-            if( getNodeId() < _fingers[i + 1].getStart() &&
-                _fingers[i + 1].getStart() <= _fingers[i + 1].getNodeId())
+            if( getNodeId() < getFingerStart(i + 1) &&
+                    getFingerStart(i + 1) <= _fingers[i + 1].getNodeId()) {
+
                 _fingers[i + 1].setNodeURL(_fingers[i].getNodeURL());
-            else
-                _fingers[i + 1].setNodeURL(nPrime.findSuccessor( _fingers[i + 1].getStart() ));
+                _fingers[i + 1].setNodeId(_fingers[i].getNodeId());
+            }
+            else {
+                String finger_iPlus1_NodeURL = nPrime.findPredecessor(getFingerStart(i + 1));
+                INode finger_iPlus1_Node = getNode(finger_iPlus1_NodeURL);
+                _fingers[i + 1].setNodeURL(finger_iPlus1_NodeURL);
+                _fingers[i + 1].setNodeId(finger_iPlus1_Node.getNodeId());
+            }
         }
     }
 
@@ -149,26 +153,26 @@ public class Node implements INode {
         for(int i = 1; i <= _m; i++) {
             String predecessorURL = findPredecessor((int)(getNodeId() - (Math.pow(2, i) + 1)));
             INode predecessor = getNode(predecessorURL);
-            predecessor.updateFingerTable(getNodeId(), i);
+            predecessor.updateFingerTable(_nodeURL, getNodeId(), i);
         }
     }
 
     @Override
-    public void updateFingerTable(int s, int i) throws RemoteException, MalformedURLException, NotBoundException {
-        if( _fingers[i].getStart() <= s &&
+    public void updateFingerTable(String url, int s, int i) throws RemoteException, MalformedURLException, NotBoundException {
+        if( getFingerStart(i) <= s &&
             s <= _fingers[i].getNodeId()) {
-            _fingers[i].setNodeId(s); // TODO: nodes are identified with ids and URLs. This needs to be rectified. node id is needed for algorithm inequalities
+            _fingers[i].setNodeURL(url);
+            _fingers[i].setNodeId(s);
 
             String predecessorURL = getPredecessorURL();
             INode predecessor = getNode(predecessorURL);
-            predecessor.updateFingerTable(s, i);
+            predecessor.updateFingerTable(url, s, i);
         }
     }
 
     @Override
-    public boolean joinFinished(String nodeURL) throws RemoteException {
+    public void joinFinished(String nodeURL) throws RemoteException {
         // tell nodeURL (should be peer 0) to release the join lock
-        return false;
     }
 
     @Override
@@ -191,16 +195,21 @@ public class Node implements INode {
         return null;
     }
 
+    private int getFingerStart(int i) {
+        return (_nodeId + (int)Math.pow(2, i - 1)) % (int)Math.pow(2, _m);
+    }
+
     private INode getNode(String nodeURL) throws RemoteException, NotBoundException, MalformedURLException {
         String service_name = String.format("//%s:%d/%s", nodeURL, _port, SERVICE_NAME);
         return (INode) Naming.lookup(service_name);
     }
 
-    public static void main(String[] args) throws UnknownHostException, RemoteException, AlreadyBoundException {
-        if(args.length != 3) throw new RuntimeException("Syntax: Server node-id m port");
+    public static void main(String[] args) throws UnknownHostException, RemoteException, AlreadyBoundException, MalformedURLException, NotBoundException {
+        if(args.length != 3 && args.length != 4) throw new RuntimeException("Syntax: Server node-id m port [bootstrap-url]");
         final int node_id = Integer.parseInt(args[0]);
         final int m = Integer.parseInt(args[1]);
         final int port = Integer.parseInt(args[2]);
+        final String bootstrapURL = args.length == 4 ? args[3] : "";
 
         Node node = new Node(node_id, m, port);
         INode stub = (INode) UnicastRemoteObject.exportObject(node, 0);
@@ -214,5 +223,7 @@ public class Node implements INode {
             registry = LocateRegistry.getRegistry(port);
         }
         registry.bind(SERVICE_NAME, stub);
+
+        node.join(bootstrapURL);
     }
 }
