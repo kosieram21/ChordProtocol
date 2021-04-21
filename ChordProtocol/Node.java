@@ -191,6 +191,11 @@ public class Node implements INode {
     }
 
     @Override
+    public void releaseLock() throws RemoteException {
+        _semaphore.release();
+    }
+
+    @Override
     public void insert(String word, String definition) throws RemoteException, MalformedURLException, NotBoundException {
         int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
 
@@ -202,18 +207,37 @@ public class Node implements INode {
     }
 
     @Override
-    public String lookup(String word) throws RemoteException {
-        return null; // Shane implement
+    public String lookup(String word) throws RemoteException, MalformedURLException, NotBoundException {
+        int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
+
+        String successorURL = findSuccessor(hash);
+        INode successor = getNode(successorURL);
+
+        if(successorURL.equals(_nodeURL)) return _dictionary.get(word);
+        else return successor.lookup(word);
     }
 
     @Override
     public String printFingerTable() throws RemoteException {
-        return null;
+        StringBuilder text = new StringBuilder();
+        for (int i = 1; i <= _m; i++) {
+            int nodeId = _fingers[i].getNodeId();
+            int start = getFingerStart(i);
+            String nodeURL = _fingers[i].getNodeURL();
+            text.append(String.format("%d | %d | %s\n", nodeId, start, nodeURL));
+        }
+        return text.toString();
     }
 
     @Override
     public String printDictionary() throws RemoteException {
-        return null;
+        StringBuilder text = new StringBuilder();
+        for (HashMap.Entry<String,String> entry : _dictionary.entrySet()) {
+            String word = entry.getKey();
+            String definition = entry.getValue();
+            text.append(String.format("%s: (%s)\n", word, definition));
+        }
+        return text.toString();
     }
 
     private int getFingerStart(int i) {
