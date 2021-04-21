@@ -65,9 +65,11 @@ public class Node implements INode {
     @Override
     public String findSuccessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
         _logger.info(String.format("finSuccessor COMMAND [%d]" , key));
+
         String nPrimeURL = findPredecessor(key);
         INode nPrime = getNode(nPrimeURL);
         String successorURL = nPrime.getSuccessorURL();
+
         _logger.info(String.format("finSuccessor RESPONSE [%s]", successorURL));
         return successorURL;
     }
@@ -75,6 +77,7 @@ public class Node implements INode {
     @Override
     public String findPredecessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
         _logger.info(String.format("findPredecessor COMMAND [%d]", key));
+
         String nPrimeURL = _nodeURL;
         INode nPrime = getNode(nPrimeURL);
 
@@ -82,6 +85,9 @@ public class Node implements INode {
         INode nPrimeSuccessor = getNode(nPrimeSuccessorURL);
         while ( !(nPrime.getNodeId() < key &&
                   nPrimeSuccessor.getNodeId() >= key)) {
+
+            _logger.info(String.format("findPredecessor CURRENT-N-PRIME [%s]" , nPrimeURL));
+            _logger.info(String.format("findPredecessor CURRENT-N-PRIME-SUCCESSOR [%s]" , nPrimeSuccessorURL));
 
             nPrimeURL = nPrime.closestPrecedingFinger(key);
             nPrime = getNode(nPrimeURL);
@@ -148,6 +154,8 @@ public class Node implements INode {
     public void join(String nodeURL) throws RemoteException, MalformedURLException, NotBoundException, InterruptedException {
         // use node url to get INode peer
         // nodeURL should point to peer 0 which will act as look manage
+        _logger.info(String.format("join COMMAND [%s]", nodeURL));
+
         if(!nodeURL.equals("")) {
             INode nPrime = getNode(nodeURL);
             nPrime.acquireLock();
@@ -164,6 +172,8 @@ public class Node implements INode {
     }
 
     private void initFingerTable(INode nPrime) throws RemoteException, MalformedURLException, NotBoundException {
+        _logger.info(String.format("initFingerTable COMMAND [%s]", nPrime.getNodeURL()));
+
         String finger1NodeURL = nPrime.findSuccessor(getFingerStart(1));
         INode finger1Node = getNode(finger1NodeURL);
         _fingers[1].setNodeURL(finger1NodeURL);
@@ -179,7 +189,7 @@ public class Node implements INode {
 
         for(int i = 1; i < _m; i++) {
             if( getNodeId() < getFingerStart(i + 1) &&
-                    getFingerStart(i + 1) <= _fingers[i + 1].getNodeId()) {
+                getFingerStart(i + 1) <= _fingers[i + 1].getNodeId()) {
 
                 _fingers[i + 1].setNodeURL(_fingers[i].getNodeURL());
                 _fingers[i + 1].setNodeId(_fingers[i].getNodeId());
@@ -198,6 +208,7 @@ public class Node implements INode {
         for(int i = 1; i <= _m; i++) {
             String predecessorURL = findPredecessor((int)(getNodeId() - (Math.pow(2, i) + 1)));
             INode predecessor = getNode(predecessorURL);
+            _logger.info(String.format("updateOthers CURRENT-PREDECESSOR [%s]", predecessorURL));
             predecessor.updateFingerTable(_nodeURL, getNodeId(), i);
         }
     }
@@ -216,6 +227,7 @@ public class Node implements INode {
 
             String predecessorURL = getPredecessorURL();
             INode predecessor = getNode(predecessorURL);
+
             predecessor.updateFingerTable(url, s, i);
         }
     }
@@ -232,6 +244,8 @@ public class Node implements INode {
 
     @Override
     public void insert(String word, String definition) throws RemoteException, MalformedURLException, NotBoundException {
+        _logger.info(String.format("insert COMMAND [%s | %s]", word, definition));
+
         int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
         _logger.info(String.format("insert HASH [%d]", hash));
 
@@ -244,7 +258,10 @@ public class Node implements INode {
 
     @Override
     public String lookup(String word) throws RemoteException, MalformedURLException, NotBoundException {
+        _logger.info(String.format("lookup COMMAND [%s]", word));
+
         int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
+        _logger.info(String.format("lookup HASH [%d]", hash));
 
         String successorURL = findSuccessor(hash);
         INode successor = getNode(successorURL);
