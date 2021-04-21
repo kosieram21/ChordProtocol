@@ -1,7 +1,15 @@
 package ChordProtocol;
 
+import java.rmi.Naming;
+
 public class Client {
     public static void main(String[] args) throws Exception {
-        System.out.println("Client!");
+        int port = Integer.parseInt(args[0]);
+        for(int i = 1; i < args.length; i++) {
+            String service_name = String.format("//%s:%d/%s", args[i], port, "Chord");
+            INode node = (INode) Naming.lookup(service_name);
+            System.out.println("----------------------------------------------------");
+            System.out.println(node.printFingerTable());
+        }
     }
 }
