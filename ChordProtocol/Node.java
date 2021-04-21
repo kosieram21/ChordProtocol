@@ -64,19 +64,19 @@ public class Node implements INode {
 
     @Override
     public String findSuccessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
-        _logger.info(String.format("COMMAND [%d]" , key));
+        _logger.info(String.format("COMMAND [key = %d]" , key));
 
         String nPrimeURL = findPredecessor(key);
         INode nPrime = getNode(nPrimeURL);
         String successorURL = nPrime.getSuccessorURL();
 
-        _logger.info(String.format("RESPONSE [%s]", successorURL));
+        _logger.info(String.format("RESPONSE [successorURL = %s]", successorURL));
         return successorURL;
     }
 
     @Override
     public String findPredecessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
-        _logger.info(String.format("COMMAND [%d]", key));
+        _logger.info(String.format("COMMAND [key = %d]", key));
 
         String nPrimeURL = _nodeURL;
         INode nPrime = getNode(nPrimeURL);
@@ -86,8 +86,8 @@ public class Node implements INode {
 
         while ( !inRange(key, Inclusivity.Exclusive, nPrime.getNodeId(), Inclusivity.Inclusive, nPrimeSuccessor.getNodeId()) ) {
 
-            _logger.info(String.format("CURRENT-N-PRIME [%s]" , nPrimeURL));
-            _logger.info(String.format("CURRENT-N-PRIME-SUCCESSOR [%s]" , nPrimeSuccessorURL));
+            _logger.info(String.format("CURRENT-N-PRIME [nPrimeURL = %s]" , nPrimeURL));
+            _logger.info(String.format("CURRENT-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s]" , nPrimeSuccessorURL));
 
             nPrimeURL = nPrime.closestPrecedingFinger(key);
             nPrime = getNode(nPrimeURL);
@@ -96,65 +96,51 @@ public class Node implements INode {
             nPrimeSuccessor = getNode(nPrimeSuccessorURL);
         }
 
-        _logger.info(String.format("RESPONSE [%s]", nPrimeURL));
+        _logger.info(String.format("RESPONSE [nPrimeURL = %s]", nPrimeURL));
         return nPrimeURL;
     }
 
     @Override
     public String closestPrecedingFinger(int key) throws RemoteException {
-        _logger.info(String.format("COMMAND [%d]", key));
-        int thisNodeID = getNodeId();
-        String URL = _nodeURL;
+        _logger.info(String.format("COMMAND [key = %d]", key));
+        String closestPrecedingFingerURL = _nodeURL;
 
         for (int i = _m; i >= 1; i--) {
-            int nodeID = _fingers[i].getNodeId();
-            if (nodeID > thisNodeID && nodeID < key) {
-                URL = _fingers[i].getNodeURL();
+            Finger finger = _fingers[i];
+            if ( inRange(finger.getNodeId(), Inclusivity.Exclusive, getNodeId(), Inclusivity.Exclusive, key) )
+            {
+                closestPrecedingFingerURL = finger.getNodeURL();
                 break;
             }
 
-            _logger.info(String.format("CURRENT-NODE [%d | %s]", nodeID, _fingers[i].getNodeURL()));
+            _logger.info(String.format("CURRENT-FINGER [fingerID = %d | fingerURL = %s]", finger.getNodeId(), finger.getNodeURL()));
         }
 
-        _logger.info(String.format("RESPONSE [%s]", URL));
-        return URL;
+        _logger.info(String.format("RESPONSE [closestPrecedingFingerURL = %s]", closestPrecedingFingerURL));
+        return closestPrecedingFingerURL;
     }
 
     @Override
-    public String getNodeURL() throws RemoteException {
-        return _nodeURL;
-    }
+    public String getNodeURL() throws RemoteException { return _nodeURL; }
 
     @Override
-    public int getNodeId() throws RemoteException {
-        return _nodeId;
-    }
+    public int getNodeId() throws RemoteException { return _nodeId; }
 
     @Override
-    public String getSuccessorURL() throws RemoteException {
-        return _successorURL;
-    }
+    public String getSuccessorURL() throws RemoteException { return _successorURL; }
 
     @Override
-    public void setSuccessorURL(String successorURL) throws RemoteException {
-        _successorURL = successorURL;
-    }
+    public void setSuccessorURL(String successorURL) throws RemoteException { _successorURL = successorURL; }
 
     @Override
-    public String getPredecessorURL() throws RemoteException {
-        return _predecessorURL;
-    }
+    public String getPredecessorURL() throws RemoteException { return _predecessorURL; }
 
     @Override
-    public void setPredecessorURL(String predecessorURL) throws RemoteException {
-        _predecessorURL = predecessorURL;
-    }
+    public void setPredecessorURL(String predecessorURL) throws RemoteException { _predecessorURL = predecessorURL; }
 
     @Override
     public void join(String nodeURL) throws RemoteException, MalformedURLException, NotBoundException, InterruptedException {
-        // use node url to get INode peer
-        // nodeURL should point to peer 0 which will act as look manage
-        _logger.info(String.format("COMMAND [%s]", nodeURL));
+        _logger.info(String.format("COMMAND [nodeURL = %s]", nodeURL));
 
         if(!nodeURL.equals("")) {
             INode nPrime = getNode(nodeURL);
@@ -164,15 +150,14 @@ public class Node implements INode {
             nPrime.releaseLock();
         }
         else {
-            for(int i = 1; i <= _m; i++)
-                _fingers[i].setNodeURL(_nodeURL);
+            for(int i = 1; i <= _m; i++) _fingers[i].setNodeURL(_nodeURL);
             setSuccessorURL(_nodeURL);
             setPredecessorURL(_nodeURL);
         }
     }
 
     private void initFingerTable(INode nPrime) throws RemoteException, MalformedURLException, NotBoundException {
-        _logger.info(String.format("COMMAND [%s]", nPrime.getNodeURL()));
+        _logger.info(String.format("COMMAND [nPrimeURL = %s]", nPrime.getNodeURL()));
 
         String finger1NodeURL = nPrime.findSuccessor(getFingerStart(1));
         INode finger1Node = getNode(finger1NodeURL);
@@ -209,46 +194,42 @@ public class Node implements INode {
                     Math.floorMod((int)(getNodeId() - Math.pow(2, i - 1) + 1), (int)Math.pow(2, _m) )
             );
             INode predecessor = getNode(predecessorURL);
-            _logger.info(String.format("CURRENT-PREDECESSOR [%s]", predecessorURL));
+            _logger.info(String.format("CURRENT-PREDECESSOR [predecessorURL = %s]", predecessorURL));
             predecessor.updateFingerTable(_nodeURL, getNodeId(), i);
         }
     }
 
     @Override
-    public void updateFingerTable(String url, int s, int i) throws RemoteException, MalformedURLException, NotBoundException {
-        _logger.info(String.format("COMMAND [%s | %d | %d]", url, s, i));
+    public void updateFingerTable(String url, int nodeId, int fingerIndex) throws RemoteException, MalformedURLException, NotBoundException {
+        _logger.info(String.format("COMMAND [URL = %s | nodeID = %d | fingerIndex = %d]", url, nodeId, fingerIndex));
 
-        Finger finger = _fingers[i];
-        if( inRange(s, Inclusivity.Inclusive, getFingerStart(i), Inclusivity.Inclusive, finger.getNodeId()) )
+        Finger finger = _fingers[fingerIndex];
+        if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Inclusive, finger.getNodeId()) )
         {
-            _logger.info(String.format("UPDATE-OCCURRED [%d, %s]",  finger.getNodeId(), finger.getNodeURL()));
+            _logger.info(String.format("UPDATE-OCCURRED [fingerID = %d, fingerURL = %s]",  finger.getNodeId(), finger.getNodeURL()));
 
             finger.setNodeURL(url);
-            finger.setNodeId(s);
+            finger.setNodeId(nodeId);
 
             String predecessorURL = getPredecessorURL();
             INode predecessor = getNode(predecessorURL);
 
-            predecessor.updateFingerTable(url, s, i);
+            predecessor.updateFingerTable(url, nodeId, fingerIndex);
         }
     }
 
     @Override
-    public void acquireLock() throws RemoteException, InterruptedException {
-        _semaphore.acquire();
-    }
+    public void acquireLock() throws RemoteException, InterruptedException { _semaphore.acquire(); }
 
     @Override
-    public void releaseLock() throws RemoteException {
-        _semaphore.release();
-    }
+    public void releaseLock() throws RemoteException { _semaphore.release(); }
 
     @Override
     public void insert(String word, String definition) throws RemoteException, MalformedURLException, NotBoundException {
-        _logger.info(String.format("COMMAND [%s | %s]", word, definition));
+        _logger.info(String.format("COMMAND [word = %s | definition = %s]", word, definition));
 
         int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
-        _logger.info(String.format("HASH [%d]", hash));
+        _logger.info(String.format("HASH [hash32 = %d]", hash));
 
         String successorURL = findSuccessor(hash);
         INode successor = getNode(successorURL);
@@ -259,10 +240,10 @@ public class Node implements INode {
 
     @Override
     public String lookup(String word) throws RemoteException, MalformedURLException, NotBoundException {
-        _logger.info(String.format("COMMAND [%s]", word));
+        _logger.info(String.format("COMMAND [word = %s]", word));
 
         int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
-        _logger.info(String.format("HASH [%d]", hash));
+        _logger.info(String.format("HASH [hash32 = %d]", hash));
 
         String successorURL = findSuccessor(hash);
         INode successor = getNode(successorURL);
@@ -271,7 +252,7 @@ public class Node implements INode {
         if(successorURL.equals(_nodeURL)) definition = _dictionary.get(word);
         else definition = successor.lookup(word);
 
-        _logger.info(String.format("RESPONSE [%s]", word));
+        _logger.info(String.format("RESPONSE [definition = %s]", definition));
         return definition;
     }
 
@@ -320,10 +301,8 @@ public class Node implements INode {
                             Inclusivity upperBoundInclusivity, int upperBound)
     {
         if(upperBound <= lowerBound) upperBound += Math.pow(2, _m);
-        boolean lowerPredicate = lowerBoundInclusivity == Inclusivity.Inclusive ?
-                value >= lowerBound : value > lowerBound;
-        boolean upperPredicate = upperBoundInclusivity == Inclusivity.Inclusive ?
-                value <= upperBound : value < upperBound;
+        boolean lowerPredicate = lowerBoundInclusivity == Inclusivity.Inclusive ? value >= lowerBound : value > lowerBound;
+        boolean upperPredicate = upperBoundInclusivity == Inclusivity.Inclusive ? value <= upperBound : value < upperBound;
         return lowerPredicate && upperPredicate;
     }
 
