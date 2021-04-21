@@ -83,8 +83,8 @@ public class Node implements INode {
 
         String nPrimeSuccessorURL = nPrime.getSuccessorURL();
         INode nPrimeSuccessor = getNode(nPrimeSuccessorURL);
-        while ( !(nPrime.getNodeId() < key &&
-                  nPrimeSuccessor.getNodeId() >= key)) {
+
+        while ( !inRange(key, Inclusivity.Exclusive, nPrime.getNodeId(), Inclusivity.Inclusive, nPrimeSuccessor.getNodeId()) ) {
 
             _logger.info(String.format("CURRENT-N-PRIME [%s]" , nPrimeURL));
             _logger.info(String.format("CURRENT-N-PRIME-SUCCESSOR [%s]" , nPrimeSuccessorURL));
@@ -312,6 +312,18 @@ public class Node implements INode {
 
     private int getFingerStart(int i) {
         return (_nodeId + (int)Math.pow(2, i - 1)) % (int)Math.pow(2, _m);
+    }
+
+    private boolean inRange(int value,
+                            Inclusivity lowerBoundInclusivity, int lowerBound,
+                            Inclusivity upperBoundInclusivity, int upperBound)
+    {
+        if(upperBound <= lowerBound) upperBound += Math.pow(2, _m);
+        boolean lowerPredicate = lowerBoundInclusivity == Inclusivity.Inclusive ?
+                value >= lowerBound : value > lowerBound;
+        boolean upperPredicate = upperBoundInclusivity == Inclusivity.Inclusive ?
+                value <= upperBound : value < upperBound;
+        return lowerPredicate && upperPredicate;
     }
 
     private INode getNode(String nodeURL) throws RemoteException, NotBoundException, MalformedURLException {
