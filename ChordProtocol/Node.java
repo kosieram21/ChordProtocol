@@ -205,7 +205,9 @@ public class Node implements INode {
     private void updateOthers() throws RemoteException, MalformedURLException, NotBoundException {
         _logger.info("COMMAND");
         for(int i = 1; i <= _m; i++) {
-            String predecessorURL = findPredecessor((int)((getNodeId() - (Math.pow(2, i) + 1)) % Math.pow(2, _m)));
+            String predecessorURL = findPredecessor(
+                    Math.floorMod((int)(getNodeId() - (Math.pow(2, i - 1) + 1)), (int)Math.pow(2, _m) )
+            );
             INode predecessor = getNode(predecessorURL);
             _logger.info(String.format("CURRENT-PREDECESSOR [%s]", predecessorURL));
             predecessor.updateFingerTable(_nodeURL, getNodeId(), i);
