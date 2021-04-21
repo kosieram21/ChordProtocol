@@ -96,13 +96,26 @@ public class Node implements INode {
 
     @Override
     public String closestPrecedingFinger(int key) throws RemoteException {
+        _logger.info(String.format("closestPrecedingFinger COMMAND [%d]", key));
         int thisNodeID = getNodeId();
+        String URL = _nodeURL;
+
         for (int i = _m; i >= 1; i--) {
             int nodeID = _fingers[i].getNodeId();
-            if (nodeID > thisNodeID && nodeID < key)
-                return _fingers[i].getNodeURL();
+            if (nodeID > thisNodeID && nodeID < key) {
+                URL = _fingers[i].getNodeURL();
+                break;
+            }
+
+            _logger.info(String.format("closestPrecedingFinger CURRENT-NODE [%d | %s]", nodeID, _fingers[i].getNodeURL()));
         }
 
+        _logger.info(String.format("closestPrecedingFinger RESPONSE [%s]", URL));
+        return URL;
+    }
+
+    @Override
+    public String getNodeURL() throws RemoteException {
         return _nodeURL;
     }
 
@@ -181,6 +194,7 @@ public class Node implements INode {
     }
 
     private void updateOthers() throws RemoteException, MalformedURLException, NotBoundException {
+        _logger.info("updateOthers COMMAND");
         for(int i = 1; i <= _m; i++) {
             String predecessorURL = findPredecessor((int)(getNodeId() - (Math.pow(2, i) + 1)));
             INode predecessor = getNode(predecessorURL);
@@ -190,8 +204,13 @@ public class Node implements INode {
 
     @Override
     public void updateFingerTable(String url, int s, int i) throws RemoteException, MalformedURLException, NotBoundException {
+        _logger.info(String.format("updateFingerTable COMMAND [%s | %d | %d]", url, s, i));
         if( getFingerStart(i) <= s &&
             s <= _fingers[i].getNodeId()) {
+
+            _logger.info(String.format("updateFingerTable UPDATE-OCCURRED [%d, %s]",
+                    _fingers[i].getNodeId(), _fingers[i].getNodeURL()));
+
             _fingers[i].setNodeURL(url);
             _fingers[i].setNodeId(s);
 
@@ -214,6 +233,7 @@ public class Node implements INode {
     @Override
     public void insert(String word, String definition) throws RemoteException, MalformedURLException, NotBoundException {
         int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
+        _logger.info(String.format("insert HASH [%d]", hash));
 
         String successorURL = findSuccessor(hash);
         INode successor = getNode(successorURL);
@@ -229,8 +249,12 @@ public class Node implements INode {
         String successorURL = findSuccessor(hash);
         INode successor = getNode(successorURL);
 
-        if(successorURL.equals(_nodeURL)) return _dictionary.get(word);
-        else return successor.lookup(word);
+        String definition;
+        if(successorURL.equals(_nodeURL)) definition = _dictionary.get(word);
+        else definition = successor.lookup(word);
+
+        _logger.info(String.format("lookup RESPONSE [%s]", word));
+        return definition;
     }
 
     @Override

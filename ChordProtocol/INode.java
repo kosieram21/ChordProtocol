@@ -10,6 +10,7 @@ public interface INode extends Remote {
     String findPredecessor(int key) throws RemoteException, MalformedURLException, NotBoundException;
     String closestPrecedingFinger(int key) throws RemoteException;
 
+    String getNodeURL() throws RemoteException;
     int getNodeId() throws RemoteException;
 
     String getSuccessorURL() throws RemoteException;
