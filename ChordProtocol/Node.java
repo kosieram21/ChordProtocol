@@ -1,8 +1,8 @@
 package ChordProtocol;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
-import java.net.UnknownHostException;
 import java.rmi.AlreadyBoundException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -55,6 +55,7 @@ public class Node implements INode {
 
     @Override
     public String findSuccessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
+        _logger.info(String.format("finSuccessor COMMAND [%d]" , key));
         String nPrimeURL = findPredecessor(key);
         INode nPrime = getNode(nPrimeURL);
         return nPrime.getSuccessorURL();
@@ -62,6 +63,7 @@ public class Node implements INode {
 
     @Override
     public String findPredecessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
+        _logger.info(String.format("findPredecessor COMMAND [%d]", key));
         String nPrimeURL = _nodeURL;
         INode nPrime = getNode(nPrimeURL);
 
@@ -77,6 +79,7 @@ public class Node implements INode {
             nPrimeSuccessor = getNode(nPrimeSuccessorURL);
         }
 
+        _logger.info(String.format("findPredecessor RESPONSE [%s]", nPrimeURL));
         return nPrimeURL;
     }
 
@@ -146,7 +149,9 @@ public class Node implements INode {
         String successorURL = getSuccessorURL();
         INode successor = getNode(successorURL);
         _predecessorURL = successor.getPredecessorURL();
+        INode predecessor = getNode(_predecessorURL);
         successor.setPredecessorURL(_nodeURL);
+        predecessor.setSuccessorURL(_nodeURL);
 
         for(int i = 1; i < _m; i++) {
             if( getNodeId() < getFingerStart(i + 1) &&
@@ -226,6 +231,11 @@ public class Node implements INode {
             String nodeURL = _fingers[i].getNodeURL();
             text.append(String.format("%d | %d | %s\n", nodeId, start, nodeURL));
         }
+        text.append("\n");
+        text.append("Successor | Predecessor \n");
+        text.append(String.format("%s | %s\n", getSuccessorURL(), getPredecessorURL()));
+
+        text.append("=================================\n");
         return text.toString();
     }
 
@@ -249,7 +259,7 @@ public class Node implements INode {
         return (INode) Naming.lookup(service_name);
     }
 
-    public static void main(String[] args) throws UnknownHostException, RemoteException, AlreadyBoundException, MalformedURLException, NotBoundException, InterruptedException {
+    public static void main(String[] args) throws IOException, AlreadyBoundException, NotBoundException, InterruptedException {
         if(args.length != 3 && args.length != 4) throw new RuntimeException("Syntax: Server node-id m port [bootstrap-url]");
         final int node_id = Integer.parseInt(args[0]);
         final int m = Integer.parseInt(args[1]);
