@@ -191,11 +191,6 @@ public class Node implements INode {
     }
 
     @Override
-    public void releaseLock() throws RemoteException {
-        _semaphore.release();
-    }
-
-    @Override
     public void insert(String word, String definition) throws RemoteException, MalformedURLException, NotBoundException {
         int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
 
@@ -256,6 +251,7 @@ public class Node implements INode {
         final int port = Integer.parseInt(args[2]);
         final String bootstrapURL = args.length == 4 ? args[3] : "";
 
+        System.setProperty("java.rmi.server.hostname", InetAddress.getLocalHost().getHostName());
         Node node = new Node(node_id, m, port);
         INode stub = (INode) UnicastRemoteObject.exportObject(node, 0);
 
