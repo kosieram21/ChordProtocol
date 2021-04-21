@@ -191,6 +191,11 @@ public class Node implements INode {
     }
 
     @Override
+    public void releaseLock() throws RemoteException {
+        _semaphore.release();
+    }
+
+    @Override
     public void insert(String word, String definition) throws RemoteException, MalformedURLException, NotBoundException {
         int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
 
