@@ -10,6 +10,8 @@ import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.HashMap;
+import java.util.concurrent.Semaphore;
 
 public class Node implements INode {
     static class Finger {
@@ -32,14 +34,23 @@ public class Node implements INode {
 
     private String _successorURL;
     private String _predecessorURL;
-    private Finger[] _fingers;
+    private final Finger[] _fingers;
+
+    private final HashMap<String, String> _dictionary;
+    private final Semaphore _semaphore;
 
     public Node(int nodeId, int m, int port) throws UnknownHostException {
         _nodeId = nodeId;
         _nodeURL = InetAddress.getLocalHost().getHostName();
         _m = m;
         _port = port;
+
         _fingers = new Finger[m + 1];
+        for(int i = 1; i <= m; i++)
+            _fingers[i] = new Finger();
+
+        _dictionary = new HashMap<String, String>();
+        _semaphore = new Semaphore(1, true);
     }
 
     @Override
@@ -107,18 +118,21 @@ public class Node implements INode {
     }
 
     @Override
-    public void join(String nodeURL) throws RemoteException, MalformedURLException, NotBoundException {
+    public void join(String nodeURL) throws RemoteException, MalformedURLException, NotBoundException, InterruptedException {
         // use node url to get INode peer
         // nodeURL should point to peer 0 which will act as look manage
         if(!nodeURL.equals("")) {
             INode nPrime = getNode(nodeURL);
+            nPrime.acquireLock();
             initFingerTable(nPrime);
             updateOthers();
+            nPrime.releaseLock();
         }
         else {
             for(int i = 1; i <= _m; i++)
                 _fingers[i].setNodeURL(_nodeURL);
-            _predecessorURL = _nodeURL;
+            setSuccessorURL(_nodeURL);
+            setPredecessorURL(_nodeURL);
         }
     }
 
@@ -128,7 +142,8 @@ public class Node implements INode {
         _fingers[1].setNodeURL(finger1NodeURL);
         _fingers[1].setNodeId(finger1Node.getNodeId());
 
-        String successorURL = nPrime.getSuccessorURL();
+        setSuccessorURL(finger1NodeURL);
+        String successorURL = getSuccessorURL();
         INode successor = getNode(successorURL);
         _predecessorURL = successor.getPredecessorURL();
         successor.setPredecessorURL(_nodeURL);
@@ -171,13 +186,19 @@ public class Node implements INode {
     }
 
     @Override
-    public void joinFinished(String nodeURL) throws RemoteException {
-        // tell nodeURL (should be peer 0) to release the join lock
+    public void acquireLock() throws RemoteException, InterruptedException {
+        _semaphore.acquire();
     }
 
     @Override
-    public boolean insert(String word, String definition) throws RemoteException {
-        return false; // Shane implement
+    public void insert(String word, String definition) throws RemoteException, MalformedURLException, NotBoundException {
+        int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
+
+        String successorURL = findSuccessor(hash);
+        INode successor = getNode(successorURL);
+
+        if(successorURL.equals(_nodeURL)) _dictionary.put(word, definition);
+        else successor.insert(word, definition);
     }
 
     @Override
@@ -204,7 +225,7 @@ public class Node implements INode {
         return (INode) Naming.lookup(service_name);
     }
 
-    public static void main(String[] args) throws UnknownHostException, RemoteException, AlreadyBoundException, MalformedURLException, NotBoundException {
+    public static void main(String[] args) throws UnknownHostException, RemoteException, AlreadyBoundException, MalformedURLException, NotBoundException, InterruptedException {
         if(args.length != 3 && args.length != 4) throw new RuntimeException("Syntax: Server node-id m port [bootstrap-url]");
         final int node_id = Integer.parseInt(args[0]);
         final int m = Integer.parseInt(args[1]);
