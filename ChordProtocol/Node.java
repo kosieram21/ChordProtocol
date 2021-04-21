@@ -12,6 +12,7 @@ import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.HashMap;
 import java.util.concurrent.Semaphore;
+import java.util.logging.*;
 
 public class Node implements INode {
     static class Finger {
@@ -39,7 +40,15 @@ public class Node implements INode {
     private final HashMap<String, String> _dictionary;
     private final Semaphore _semaphore;
 
-    public Node(int nodeId, int m, int port) throws UnknownHostException {
+    private final Logger _logger;
+
+    public Node(int nodeId, int m, int port) throws IOException {
+        _logger = Logger.getLogger("ChordNode");
+
+        FileHandler fileHandler = new FileHandler(String.format("%s-%d.txt", _logger.getName(), nodeId));
+        fileHandler.setFormatter(new SimpleFormatter());
+        _logger.addHandler(fileHandler);
+
         _nodeId = nodeId;
         _nodeURL = InetAddress.getLocalHost().getHostName();
         _m = m;
@@ -58,7 +67,9 @@ public class Node implements INode {
         _logger.info(String.format("finSuccessor COMMAND [%d]" , key));
         String nPrimeURL = findPredecessor(key);
         INode nPrime = getNode(nPrimeURL);
-        return nPrime.getSuccessorURL();
+        String successorURL = nPrime.getSuccessorURL();
+        _logger.info(String.format("finSuccessor RESPONSE [%s]", successorURL));
+        return successorURL;
     }
 
     @Override
@@ -225,6 +236,9 @@ public class Node implements INode {
     @Override
     public String printFingerTable() throws RemoteException {
         StringBuilder text = new StringBuilder();
+        text.append("=================================\n");
+
+        text.append("Node ID | Start Finger | Node URL\n");
         for (int i = 1; i <= _m; i++) {
             int nodeId = _fingers[i].getNodeId();
             int start = getFingerStart(i);
@@ -242,11 +256,16 @@ public class Node implements INode {
     @Override
     public String printDictionary() throws RemoteException {
         StringBuilder text = new StringBuilder();
+        text.append("=================================\n");
+
+        text.append("Word | Definition\n");
         for (HashMap.Entry<String,String> entry : _dictionary.entrySet()) {
             String word = entry.getKey();
             String definition = entry.getValue();
-            text.append(String.format("%s: (%s)\n", word, definition));
+            text.append(String.format("%s | %s\n", word, definition));
         }
+
+        text.append("=================================\n");
         return text.toString();
     }
 
