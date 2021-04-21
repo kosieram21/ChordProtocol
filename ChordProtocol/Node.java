@@ -188,9 +188,8 @@ public class Node implements INode {
         predecessor.setSuccessorURL(_nodeURL);
 
         for(int i = 1; i < _m; i++) {
-            if( getNodeId() < getFingerStart(i + 1) &&
-                getFingerStart(i + 1) <= _fingers[i + 1].getNodeId()) {
-
+            if( inRange(getFingerStart(i + 1), Inclusivity.Exclusive, getNodeId(), Inclusivity.Inclusive, _fingers[i + 1].getNodeId()) )
+            {
                 _fingers[i + 1].setNodeURL(_fingers[i].getNodeURL());
                 _fingers[i + 1].setNodeId(_fingers[i].getNodeId());
             }
@@ -216,14 +215,14 @@ public class Node implements INode {
     @Override
     public void updateFingerTable(String url, int s, int i) throws RemoteException, MalformedURLException, NotBoundException {
         _logger.info(String.format("COMMAND [%s | %d | %d]", url, s, i));
-        if( getFingerStart(i) <= s &&
-            s <= _fingers[i].getNodeId()) {
 
-            _logger.info(String.format("UPDATE-OCCURRED [%d, %s]",
-                    _fingers[i].getNodeId(), _fingers[i].getNodeURL()));
+        Finger finger = _fingers[i];
+        if( inRange(s, Inclusivity.Inclusive, getFingerStart(i), Inclusivity.Inclusive, finger.getNodeId()) )
+        {
+            _logger.info(String.format("UPDATE-OCCURRED [%d, %s]",  finger.getNodeId(), finger.getNodeURL()));
 
-            _fingers[i].setNodeURL(url);
-            _fingers[i].setNodeId(s);
+            finger.setNodeURL(url);
+            finger.setNodeId(s);
 
             String predecessorURL = getPredecessorURL();
             INode predecessor = getNode(predecessorURL);
