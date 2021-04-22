@@ -85,7 +85,7 @@ public class Node implements INode {
 
     @Override
     public String findPredecessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
-        _logger.info("======START======");
+        _logger.info("=======START=======");
         _logger.info(String.format("COMMAND [key = %d]", key));
 
         String nPrimeURL = _nodeURL;
@@ -94,10 +94,11 @@ public class Node implements INode {
         String nPrimeSuccessorURL = nPrime.getSuccessorURL();
         INode nPrimeSuccessor = getNode(nPrimeSuccessorURL);
 
-        int newKey = moduloFingerCorrection(key, getNodeId());
+        int newKey = moduloFingerCorrection(key, nPrime.getNodeId());
 
         while ( !inRange(newKey, Inclusivity.Exclusive, nPrime.getNodeId(), Inclusivity.Inclusive, nPrimeSuccessor.getNodeId()) ) {
-
+            _logger.info("----START----");
+            _logger.info(String.format("CURRENT-KEY %d", newKey));
             _logger.info(String.format("CURRENT-N-PRIME [nPrimeURL = %s | nPrimeId = %s]" , nPrimeURL, nPrime.getNodeId()));
             _logger.info(String.format("CURRENT-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s | nPrimeSuccessorId = %s]" , nPrimeSuccessorURL, nPrimeSuccessor.getNodeId()));
 
@@ -106,13 +107,16 @@ public class Node implements INode {
 
             nPrimeSuccessorURL = nPrime.getSuccessorURL();
             nPrimeSuccessor = getNode(nPrimeSuccessorURL);
+            newKey = moduloFingerCorrection(key, nPrime.getNodeId());
 
+            _logger.info(String.format("NEW-KEY %d", newKey));
             _logger.info(String.format("NEW-N-PRIME [nPrimeURL = %s | nPrimeId = %s]" , nPrimeURL, nPrime.getNodeId()));
             _logger.info(String.format("NEW-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s | nPrimeSuccessorId = %s]" , nPrimeSuccessorURL, nPrimeSuccessor.getNodeId()));
+            _logger.info("-----END-----");
         }
 
         _logger.info(String.format("RESPONSE [nPrimeURL = %s]", nPrimeURL));
-        _logger.info("=======END=======");
+        _logger.info("========END========");
         return nPrimeURL;
     }
 
