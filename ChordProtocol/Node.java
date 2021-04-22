@@ -268,7 +268,8 @@ public class Node implements INode {
 
 //        _logger.setLevel(Level.FINEST);
 
-        if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Exclusive, finger.getNodeId()) )
+        if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Exclusive, finger.getNodeId())
+            && getFingerStart(fingerIndex) != finger.getNodeId())
         {
             _logger.info(String.format("OLD-FINGER [fingerID = %d, fingerURL = %s]",  finger.getNodeId(), finger.getNodeURL()));
 
