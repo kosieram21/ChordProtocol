@@ -97,7 +97,7 @@ public class Node implements INode {
 
         int newKey = moduloFingerCorrection(key, nPrime.getNodeId());
 
-        while ( !inRange(newKey, Inclusivity.Exclusive, nPrime.getNodeId(), Inclusivity.Inclusive, nPrimeSuccessor.getNodeId(), true) ) {
+        while ( !inRange(newKey, Inclusivity.Exclusive, nPrime.getNodeId(), Inclusivity.Inclusive, nPrimeSuccessor.getNodeId() ) ) {
             _logger.info(String.format("CURRENT-KEY %d", newKey));
             _logger.info(String.format("CURRENT-N-PRIME [nPrimeURL = %s | nPrimeId = %s]" , nPrimeURL, nPrime.getNodeId()));
             _logger.info(String.format("CURRENT-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s | nPrimeSuccessorId = %s]" , nPrimeSuccessorURL, nPrimeSuccessor.getNodeId()));
@@ -129,7 +129,7 @@ public class Node implements INode {
             int correctedFingerID = moduloFingerCorrection(finger.getNodeId(), getNodeId());
             _logger.info(String.format("FINGER-CORRECTION [fingerID = %d | correctedFingerID = %s]", finger.getNodeId(), correctedFingerID));
 
-            if ( inRange(correctedFingerID, Inclusivity.Exclusive, getNodeId(), Inclusivity.Exclusive, key, true) )
+            if ( inRange(correctedFingerID, Inclusivity.Exclusive, getNodeId(), Inclusivity.Exclusive, key) )
             {
                 closestPrecedingFingerURL = finger.getNodeURL();
                 break;
@@ -208,7 +208,7 @@ public class Node implements INode {
             int correctedFingerStart = moduloFingerCorrection(fingerStart, getNodeId());
             _logger.info(String.format("FINGER-CORRECTION [fingerStart = %d | correctedFingerStart = %s]", fingerStart, correctedFingerStart));
 
-            if( inRange(correctedFingerStart, Inclusivity.Exclusive, getNodeId(), Inclusivity.Inclusive, _fingers[i].getNodeId(), true) )
+            if( inRange(correctedFingerStart, Inclusivity.Exclusive, getNodeId(), Inclusivity.Inclusive, _fingers[i].getNodeId()) )
             {
                 String finger_iPlus1_NodeURL = _fingers[i].getNodeURL();
                 int finger_iPlus1_NodeID = _fingers[i].getNodeId();
@@ -268,7 +268,7 @@ public class Node implements INode {
 
 //        _logger.setLevel(Level.FINEST);
 
-        if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Exclusive, finger.getNodeId(), false) )
+        if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Exclusive, finger.getNodeId()) )
         {
             _logger.info(String.format("OLD-FINGER [fingerID = %d, fingerURL = %s]",  finger.getNodeId(), finger.getNodeURL()));
 
@@ -371,13 +371,12 @@ public class Node implements INode {
 
     private boolean inRange(int value,
                             Inclusivity lowerBoundInclusivity, int lowerBound,
-                            Inclusivity upperBoundInclusivity, int upperBound,
-                            boolean applyModuloCorrection)
+                            Inclusivity upperBoundInclusivity, int upperBound)
     {
         _logger.info(String.format("COMMAND [value = %d | lowerBound = %s-%d | upperBound = %s-%d]",
                 value, lowerBoundInclusivity, lowerBound, upperBoundInclusivity, upperBound));
 
-        if(upperBound <= lowerBound && applyModuloCorrection) upperBound += _modulo;
+        if(upperBound <= lowerBound) upperBound += _modulo;
         _logger.info(String.format("CORRECTED-BOUND [upperBound = %d]", upperBound));
 
         boolean lowerPredicate = lowerBoundInclusivity == Inclusivity.Inclusive ? value >= lowerBound : value > lowerBound;
