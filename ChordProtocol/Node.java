@@ -231,7 +231,7 @@ public class Node implements INode {
         _logger.setLevel(Level.ALL);
         for(int i = 1; i <= _m; i++) {
             String predecessorURL = findPredecessor(
-                    Math.floorMod((getNodeId() - (int)Math.pow(2, i - 1) + 1), _modulo )
+                    Math.floorMod((int)(getNodeId() - Math.pow(2, i - 1) + 1), _modulo )
             );
             INode predecessor = getNode(predecessorURL);
             _logger.info(String.format("CURRENT-PREDECESSOR [predecessorURL = %s]", predecessorURL));
