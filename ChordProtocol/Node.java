@@ -221,7 +221,7 @@ public class Node implements INode {
                         i + 1, finger_iPlus1_NodeURL, finger_iPlus1_NodeID));
             }
             else {
-                String finger_iPlus1_NodeURL = nPrime.findPredecessor(correctedFingerStart);  // EXPERIMENTAL: Changed from `fingerStart` to `correctedFingerStart`
+                String finger_iPlus1_NodeURL = nPrime.findSuccessor(fingerStart);
                 INode finger_iPlus1_Node = getNode(finger_iPlus1_NodeURL);
                 _fingers[i + 1].setNodeURL(finger_iPlus1_NodeURL);
                 _fingers[i + 1].setNodeId(finger_iPlus1_Node.getNodeId());
