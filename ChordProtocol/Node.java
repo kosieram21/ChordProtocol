@@ -190,8 +190,10 @@ public class Node implements INode {
     private void updateOthers() throws RemoteException, MalformedURLException, NotBoundException {
         _logger.info("COMMAND");
         for(int i = 1; i <= _m; i++) {
+            int temp = (int)(getNodeId() - Math.pow(2, i - 1) + 1);
+            _logger.info(String.format("KEY %d", temp));
             String predecessorURL = findPredecessor(
-                    Math.floorMod((int)(getNodeId() - Math.pow(2, i - 1)), (int)Math.pow(2, _m) )
+                    Math.floorMod((int)(getNodeId() - Math.pow(2, i - 1) + 1), (int)Math.pow(2, _m) )
             );
             INode predecessor = getNode(predecessorURL);
             _logger.info(String.format("CURRENT-PREDECESSOR [predecessorURL = %s]", predecessorURL));
