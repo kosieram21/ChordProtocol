@@ -57,6 +57,8 @@ public class Node implements INode {
         consoleHandler.setFormatter(formatter);
         _logger.addHandler(consoleHandler);
 
+        _logger.setLevel(Level.INFO);
+
         _nodeId = nodeId;
         _nodeURL = InetAddress.getLocalHost().getHostName();
         _m = m;
@@ -85,7 +87,6 @@ public class Node implements INode {
 
     @Override
     public String findPredecessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
-        _logger.info("=======START=======");
         _logger.info(String.format("COMMAND [key = %d]", key));
 
         String nPrimeURL = _nodeURL;
@@ -97,7 +98,6 @@ public class Node implements INode {
         int newKey = moduloFingerCorrection(key, nPrime.getNodeId());
 
         while ( !inRange(newKey, Inclusivity.Exclusive, nPrime.getNodeId(), Inclusivity.Inclusive, nPrimeSuccessor.getNodeId()) ) {
-            _logger.info("----START----");
             _logger.info(String.format("CURRENT-KEY %d", newKey));
             _logger.info(String.format("CURRENT-N-PRIME [nPrimeURL = %s | nPrimeId = %s]" , nPrimeURL, nPrime.getNodeId()));
             _logger.info(String.format("CURRENT-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s | nPrimeSuccessorId = %s]" , nPrimeSuccessorURL, nPrimeSuccessor.getNodeId()));
@@ -112,11 +112,9 @@ public class Node implements INode {
             _logger.info(String.format("NEW-KEY %d", newKey));
             _logger.info(String.format("NEW-N-PRIME [nPrimeURL = %s | nPrimeId = %s]" , nPrimeURL, nPrime.getNodeId()));
             _logger.info(String.format("NEW-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s | nPrimeSuccessorId = %s]" , nPrimeSuccessorURL, nPrimeSuccessor.getNodeId()));
-            _logger.info("-----END-----");
         }
 
         _logger.info(String.format("RESPONSE [nPrimeURL = %s]", nPrimeURL));
-        _logger.info("========END========");
         return nPrimeURL;
     }
 
@@ -237,16 +235,24 @@ public class Node implements INode {
 
     private void updateOthers() throws RemoteException, MalformedURLException, NotBoundException {
         _logger.info("COMMAND");
-        _logger.setLevel(Level.ALL);
+        _logger.info("=======START=======");
+
         for(int i = 1; i <= _m; i++) {
-            String predecessorURL = findPredecessor(
-                    Math.floorMod((int)(getNodeId() - Math.pow(2, i - 1) + 1), _modulo )
-            );
+
+            _logger.info("----START----");
+            int fingerOffset = (int)Math.pow(2, i - 1);
+            int newKey = Math.floorMod((int)(getNodeId() - Math.pow(2, i - 1) + 1), _modulo);
+            _logger.info(String.format("UPDATE-KEY [fingerIndex = %d | newKey = %d - %d + 1 = %d]", i, getNodeId(), fingerOffset, newKey));
+
+
+            String predecessorURL = findPredecessor(newKey);
             INode predecessor = getNode(predecessorURL);
             _logger.info(String.format("CURRENT-PREDECESSOR [predecessorURL = %s]", predecessorURL));
             predecessor.updateFingerTable(_nodeURL, getNodeId(), i);
+
+            _logger.info("-----END-----");
         }
-        _logger.setLevel(Level.INFO);
+        _logger.info("========END========");
     }
 
     @Override
