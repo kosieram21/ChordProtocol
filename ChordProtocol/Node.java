@@ -266,7 +266,7 @@ public class Node implements INode {
         //int correctedFingerStart = moduloFingerCorrection(fingerStart, getNodeId());
         //_logger.info(String.format("FINGER-CORRECTION [fingerStart = %d | correctedFingerStart = %s]", fingerStart, correctedFingerStart));
 
-        _logger.setLevel(Level.FINEST);
+//        _logger.setLevel(Level.FINEST);
 
         if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Exclusive, finger.getNodeId()) )
         {
@@ -285,7 +285,7 @@ public class Node implements INode {
 
         }
 
-        _logger.setLevel(Level.INFO);
+//        _logger.setLevel(Level.INFO);
     }
 
     @Override
@@ -373,15 +373,15 @@ public class Node implements INode {
                             Inclusivity lowerBoundInclusivity, int lowerBound,
                             Inclusivity upperBoundInclusivity, int upperBound)
     {
-        _logger.finest(String.format("COMMAND [value = %d | lowerBound = %s-%d | upperBound = %s-%d]",
+        _logger.info(String.format("COMMAND [value = %d | lowerBound = %s-%d | upperBound = %s-%d]",
                 value, lowerBoundInclusivity, lowerBound, upperBoundInclusivity, upperBound));
 
         if(upperBound <= lowerBound) upperBound += _modulo;
-        _logger.finest(String.format("CORRECTED-BOUND [upperBound = %d]", upperBound));
+        _logger.info(String.format("CORRECTED-BOUND [upperBound = %d]", upperBound));
 
         boolean lowerPredicate = lowerBoundInclusivity == Inclusivity.Inclusive ? value >= lowerBound : value > lowerBound;
         boolean upperPredicate = upperBoundInclusivity == Inclusivity.Inclusive ? value <= upperBound : value < upperBound;
-        _logger.finest(String.format("PREDICATES [lowerPredicate = %b | upperPredicate = %b]", lowerPredicate, upperPredicate));
+        _logger.info(String.format("PREDICATES [lowerPredicate = %b | upperPredicate = %b]", lowerPredicate, upperPredicate));
 
         return lowerPredicate && upperPredicate;
     }
