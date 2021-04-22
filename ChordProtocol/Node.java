@@ -85,6 +85,7 @@ public class Node implements INode {
 
     @Override
     public String findPredecessor(int key) throws RemoteException, MalformedURLException, NotBoundException {
+        _logger.info("======START======");
         _logger.info(String.format("COMMAND [key = %d]", key));
 
         String nPrimeURL = _nodeURL;
@@ -105,9 +106,13 @@ public class Node implements INode {
 
             nPrimeSuccessorURL = nPrime.getSuccessorURL();
             nPrimeSuccessor = getNode(nPrimeSuccessorURL);
+
+            _logger.info(String.format("NEW-N-PRIME [nPrimeURL = %s]" , nPrimeURL));
+            _logger.info(String.format("NEW-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s]" , nPrimeSuccessorURL));
         }
 
         _logger.info(String.format("RESPONSE [nPrimeURL = %s]", nPrimeURL));
+        _logger.info("=======END=======");
         return nPrimeURL;
     }
 
