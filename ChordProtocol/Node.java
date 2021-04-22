@@ -114,7 +114,7 @@ public class Node implements INode {
 
         for (int i = _m; i >= 1; i--) {
             Finger finger = _fingers[i];
-            if ( inRange(finger.getNodeId(), Inclusivity.Exclusive, getNodeId(), Inclusivity.Exclusive, key) )
+            if ( inRange(finger.getNodeId(), Inclusivity.Inclusive, getNodeId(), Inclusivity.Inclusive, key) ) // NOTE: We changed these to be Inclusive, pseudo-code had it as Exclusive
             {
                 closestPrecedingFingerURL = finger.getNodeURL();
                 break;
@@ -217,7 +217,6 @@ public class Node implements INode {
     private void updateOthers() throws RemoteException, MalformedURLException, NotBoundException {
         _logger.info("COMMAND");
         for(int i = 1; i <= _m; i++) {
-            int temp = (int)(getNodeId() - Math.pow(2, i - 1) + 1);
             String predecessorURL = findPredecessor(
                     Math.floorMod((int)(getNodeId() - Math.pow(2, i - 1) + 1), (int)Math.pow(2, _m) )
             );
