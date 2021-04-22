@@ -266,12 +266,16 @@ public class Node implements INode {
         //int correctedFingerStart = moduloFingerCorrection(fingerStart, getNodeId());
         //_logger.info(String.format("FINGER-CORRECTION [fingerStart = %d | correctedFingerStart = %s]", fingerStart, correctedFingerStart));
 
+        _logger.setLevel(Level.FINEST);
+
         if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Exclusive, finger.getNodeId()) )
         {
-            _logger.info(String.format("UPDATE-OCCURRED [fingerID = %d, fingerURL = %s]",  finger.getNodeId(), finger.getNodeURL()));
+            _logger.info(String.format("OLD-FINGER [fingerID = %d, fingerURL = %s]",  finger.getNodeId(), finger.getNodeURL()));
 
             finger.setNodeURL(url);
             finger.setNodeId(nodeId);
+
+            _logger.info(String.format("UPDATE-FINGER [fingerID = %d, fingerURL = %s]",  finger.getNodeId(), finger.getNodeURL()));
 
             String predecessorURL = getPredecessorURL();
             if (!predecessorURL.equals(url)) {
@@ -280,6 +284,8 @@ public class Node implements INode {
             }
 
         }
+
+        _logger.setLevel(Level.INFO);
     }
 
     @Override
