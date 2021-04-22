@@ -221,7 +221,7 @@ public class Node implements INode {
                         i + 1, finger_iPlus1_NodeURL, finger_iPlus1_NodeID));
             }
             else {
-                String finger_iPlus1_NodeURL = nPrime.findPredecessor(fingerStart);
+                String finger_iPlus1_NodeURL = nPrime.findPredecessor(correctedFingerStart);  // EXPERIMENTAL: Changed from `fingerStart` to `correctedFingerStart`
                 INode finger_iPlus1_Node = getNode(finger_iPlus1_NodeURL);
                 _fingers[i + 1].setNodeURL(finger_iPlus1_NodeURL);
                 _fingers[i + 1].setNodeId(finger_iPlus1_Node.getNodeId());
@@ -262,13 +262,13 @@ public class Node implements INode {
         Finger finger = _fingers[fingerIndex];
 
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT changed lower bound  to use correctedFingerStart !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        int fingerStart = getFingerStart(fingerIndex);
-        int correctedFingerStart = moduloFingerCorrection(fingerStart, getNodeId());
-        _logger.info(String.format("FINGER-CORRECTION [fingerStart = %d | correctedFingerStart = %s]", fingerStart, correctedFingerStart));
+//        int fingerStart = getFingerStart(fingerIndex);
+//        int correctedFingerStart = moduloFingerCorrection(fingerStart, getNodeId());
+//        _logger.info(String.format("FINGER-CORRECTION [fingerStart = %d | correctedFingerStart = %s]", fingerStart, correctedFingerStart));
 
 //        _logger.setLevel(Level.FINEST);
 
-        if( inRange(nodeId, Inclusivity.Inclusive, correctedFingerStart, Inclusivity.Exclusive, finger.getNodeId())
+        if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Exclusive, finger.getNodeId())
             && getFingerStart(fingerIndex) != finger.getNodeId())
         {
             _logger.info(String.format("OLD-FINGER [fingerID = %d, fingerURL = %s]",  finger.getNodeId(), finger.getNodeURL()));
