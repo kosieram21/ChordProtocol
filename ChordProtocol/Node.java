@@ -180,7 +180,7 @@ public class Node implements INode {
         _fingers[1].setNodeId(finger1Node.getNodeId());
 
         _logger.info(String.format(
-                "UPDATE-FINGER [fingerID = %d | fingerURL = %s |  fingerID = %s]",
+                "UPDATE-FINGER [fingerIndex = %d | fingerURL = %s |  fingerID = %s]",
                 1, finger1NodeURL, finger1Node.getNodeId()));
 
         setSuccessorURL(finger1NodeURL);
@@ -208,7 +208,7 @@ public class Node implements INode {
                 _fingers[i + 1].setNodeId(finger_iPlus1_NodeID);
 
                 _logger.info(String.format(
-                        "UPDATE-FINGER [fingerID = %d | fingerURL = %s |  fingerID = %s]",
+                        "UPDATE-FINGER [fingerIndex = %d | fingerURL = %s |  fingerID = %s]",
                         i + 1, finger_iPlus1_NodeURL, finger_iPlus1_NodeID));
             }
             else {
@@ -218,7 +218,7 @@ public class Node implements INode {
                 _fingers[i + 1].setNodeId(finger_iPlus1_Node.getNodeId());
 
                 _logger.info(String.format(
-                        "UPDATE-FINGER [fingerID = %d | fingerURL = %s |  fingerID = %s]",
+                        "UPDATE-FINGER [fingerIndex = %d | fingerURL = %s |  fingerID = %s]",
                         i + 1, finger_iPlus1_NodeURL, finger_iPlus1_Node.getNodeId()));
             }
         }
@@ -249,9 +249,11 @@ public class Node implements INode {
             finger.setNodeId(nodeId);
 
             String predecessorURL = getPredecessorURL();
-            INode predecessor = getNode(predecessorURL);
+            if (!predecessorURL.equals(url)) {
+                INode predecessor = getNode(predecessorURL);
+                predecessor.updateFingerTable(url, nodeId, fingerIndex);
+            }
 
-            predecessor.updateFingerTable(url, nodeId, fingerIndex);
         }
     }
 
