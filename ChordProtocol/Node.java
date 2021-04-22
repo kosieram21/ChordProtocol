@@ -204,7 +204,7 @@ public class Node implements INode {
         _logger.info(String.format("COMMAND [URL = %s | nodeID = %d | fingerIndex = %d]", url, nodeId, fingerIndex));
 
         Finger finger = _fingers[fingerIndex];
-        if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Inclusive, finger.getNodeId()) )
+        if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Exclusive, finger.getNodeId()) )
         {
             _logger.info(String.format("UPDATE-OCCURRED [fingerID = %d, fingerURL = %s]",  finger.getNodeId(), finger.getNodeURL()));
 
