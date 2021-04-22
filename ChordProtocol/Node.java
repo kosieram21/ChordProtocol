@@ -226,6 +226,7 @@ public class Node implements INode {
 
     private void updateOthers() throws RemoteException, MalformedURLException, NotBoundException {
         _logger.info("COMMAND");
+        _logger.setLevel(Level.ALL);
         for(int i = 1; i <= _m; i++) {
             String predecessorURL = findPredecessor(
                     Math.floorMod((getNodeId() - (int)Math.pow(2, i - 1) + 1), _modulo )
@@ -234,6 +235,7 @@ public class Node implements INode {
             _logger.info(String.format("CURRENT-PREDECESSOR [predecessorURL = %s]", predecessorURL));
             predecessor.updateFingerTable(_nodeURL, getNodeId(), i);
         }
+        _logger.setLevel(Level.INFO);
     }
 
     @Override
@@ -342,15 +344,15 @@ public class Node implements INode {
                             Inclusivity lowerBoundInclusivity, int lowerBound,
                             Inclusivity upperBoundInclusivity, int upperBound)
     {
-        _logger.info(String.format("COMMAND [value = %d | lowerBound = %s-%d | upperBound = %s-%d]",
+        _logger.finest(String.format("COMMAND [value = %d | lowerBound = %s-%d | upperBound = %s-%d]",
                 value, lowerBoundInclusivity, lowerBound, upperBoundInclusivity, upperBound));
 
         if(upperBound <= lowerBound) upperBound += _modulo;
-        _logger.info(String.format("CORRECTED-BOUND [upperBound = %d]", upperBound));
+        _logger.finest(String.format("CORRECTED-BOUND [upperBound = %d]", upperBound));
 
         boolean lowerPredicate = lowerBoundInclusivity == Inclusivity.Inclusive ? value >= lowerBound : value > lowerBound;
         boolean upperPredicate = upperBoundInclusivity == Inclusivity.Inclusive ? value <= upperBound : value < upperBound;
-        _logger.info(String.format("PREDICATES [lowerPredicate = %b | upperPredicate = %b]", lowerPredicate, upperPredicate));
+        _logger.finest(String.format("PREDICATES [lowerPredicate = %b | upperPredicate = %b]", lowerPredicate, upperPredicate));
 
         return lowerPredicate && upperPredicate;
     }
