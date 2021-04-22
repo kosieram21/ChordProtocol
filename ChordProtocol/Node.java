@@ -98,8 +98,8 @@ public class Node implements INode {
 
         while ( !inRange(newKey, Inclusivity.Exclusive, nPrime.getNodeId(), Inclusivity.Inclusive, nPrimeSuccessor.getNodeId()) ) {
 
-            _logger.info(String.format("CURRENT-N-PRIME [nPrimeURL = %s]" , nPrimeURL));
-            _logger.info(String.format("CURRENT-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s]" , nPrimeSuccessorURL));
+            _logger.info(String.format("CURRENT-N-PRIME [nPrimeURL = %s | nPrimeId = %s]" , nPrimeURL, nPrime.getNodeId()));
+            _logger.info(String.format("CURRENT-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s | nPrimeSuccessorId = %s]" , nPrimeSuccessorURL, nPrimeSuccessor.getNodeId()));
 
             nPrimeURL = nPrime.closestPrecedingFinger(key);
             nPrime = getNode(nPrimeURL);
@@ -107,8 +107,8 @@ public class Node implements INode {
             nPrimeSuccessorURL = nPrime.getSuccessorURL();
             nPrimeSuccessor = getNode(nPrimeSuccessorURL);
 
-            _logger.info(String.format("NEW-N-PRIME [nPrimeURL = %s]" , nPrimeURL));
-            _logger.info(String.format("NEW-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s]" , nPrimeSuccessorURL));
+            _logger.info(String.format("NEW-N-PRIME [nPrimeURL = %s | nPrimeId = %s]" , nPrimeURL, nPrime.getNodeId()));
+            _logger.info(String.format("NEW-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s | nPrimeSuccessorId = %s]" , nPrimeSuccessorURL, nPrimeSuccessor.getNodeId()));
         }
 
         _logger.info(String.format("RESPONSE [nPrimeURL = %s]", nPrimeURL));
@@ -252,11 +252,11 @@ public class Node implements INode {
         Finger finger = _fingers[fingerIndex];
 
         // !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!! IMPORTANT changed lower bound  to use correctedFingerStart !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-        int fingerStart = getFingerStart(fingerIndex);
-        int correctedFingerStart = moduloFingerCorrection(fingerStart, getNodeId());
-        _logger.info(String.format("FINGER-CORRECTION [fingerStart = %d | correctedFingerStart = %s]", fingerStart, correctedFingerStart));
+        //int fingerStart = getFingerStart(fingerIndex);
+        //int correctedFingerStart = moduloFingerCorrection(fingerStart, getNodeId());
+        //_logger.info(String.format("FINGER-CORRECTION [fingerStart = %d | correctedFingerStart = %s]", fingerStart, correctedFingerStart));
 
-        if( inRange(nodeId, Inclusivity.Inclusive, correctedFingerStart, Inclusivity.Exclusive, finger.getNodeId()) )
+        if( inRange(nodeId, Inclusivity.Inclusive, getFingerStart(fingerIndex), Inclusivity.Exclusive, finger.getNodeId()) )
         {
             _logger.info(String.format("UPDATE-OCCURRED [fingerID = %d, fingerURL = %s]",  finger.getNodeId(), finger.getNodeURL()));
 
