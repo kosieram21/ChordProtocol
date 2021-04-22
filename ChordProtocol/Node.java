@@ -49,6 +49,10 @@ public class Node implements INode {
         fileHandler.setFormatter(new CustomLogFormatter());
         _logger.addHandler(fileHandler);
 
+        ConsoleHandler consoleHandler = new ConsoleHandler();
+        consoleHandler.setFormatter(new CustomLogFormatter());
+        _logger.addHandler(consoleHandler);
+
         _nodeId = nodeId;
         _nodeURL = InetAddress.getLocalHost().getHostName();
         _m = m;
@@ -313,8 +317,11 @@ public class Node implements INode {
         return text.toString();
     }
 
-    private int getFingerStart(int i) {
-        return (_nodeId + (int)Math.pow(2, i - 1)) % (int)Math.pow(2, _m);
+    private int getFingerStart(int i) throws RemoteException {
+        _logger.info(String.format("COMMAND [nodeID = %d | fingerIndex = %d]", getNodeId(), i));
+        int start = (_nodeId + (int)Math.pow(2, i - 1)) % (int)Math.pow(2, _m);
+        _logger.info(String.format("RESPONSE [fingerStart = %d]", start));
+        return start;
     }
 
     private boolean inRange(int value,
