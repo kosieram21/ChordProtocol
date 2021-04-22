@@ -43,14 +43,17 @@ public class Node implements INode {
     private final Logger _logger;
 
     public Node(int nodeId, int m, int port) throws IOException {
+        LogManager.getLogManager().reset();
         _logger = Logger.getLogger("ChordNode");
 
+        CustomLogFormatter formatter = new CustomLogFormatter();
+
         FileHandler fileHandler = new FileHandler(String.format("%s-%d.txt", _logger.getName(), nodeId));
-        fileHandler.setFormatter(new CustomLogFormatter());
+        fileHandler.setFormatter(formatter);
         _logger.addHandler(fileHandler);
 
         ConsoleHandler consoleHandler = new ConsoleHandler();
-        consoleHandler.setFormatter(new CustomLogFormatter());
+        consoleHandler.setFormatter(formatter);
         _logger.addHandler(consoleHandler);
 
         _nodeId = nodeId;
