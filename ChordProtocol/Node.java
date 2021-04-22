@@ -31,6 +31,7 @@ public class Node implements INode {
     private final int _nodeId;
     private final String _nodeURL;
     private final int _m;
+    private final int _modulo;
     private final int _port;
 
     private String _successorURL;
@@ -59,6 +60,7 @@ public class Node implements INode {
         _nodeId = nodeId;
         _nodeURL = InetAddress.getLocalHost().getHostName();
         _m = m;
+        _modulo = (int)Math.pow(2, _m);
         _port = port;
 
         _fingers = new Finger[m + 1];
@@ -114,7 +116,11 @@ public class Node implements INode {
 
         for (int i = _m; i >= 1; i--) {
             Finger finger = _fingers[i];
-            if ( inRange(finger.getNodeId(), Inclusivity.Inclusive, getNodeId(), Inclusivity.Inclusive, key) ) // NOTE: We changed these to be Inclusive, pseudo-code had it as Exclusive
+
+            int correctedFingerID = moduloFingerCorrection(finger.getNodeId(), getNodeId());
+            _logger.info(String.format("FINGER-CORRECTION [fingerID = %d | correctedFingerID = %s]", finger.getNodeId(), correctedFingerID));
+
+            if ( inRange(correctedFingerID, Inclusivity.Exclusive, getNodeId(), Inclusivity.Exclusive, key) )
             {
                 closestPrecedingFingerURL = finger.getNodeURL();
                 break;
@@ -189,7 +195,11 @@ public class Node implements INode {
         _logger.info(String.format("GET-PREDECESSOR [predecessorURL = %s | predecessorID = %s]", _predecessorURL, predecessor.getNodeId()));
 
         for(int i = 1; i < _m; i++) {
-            if( inRange(getFingerStart(i + 1), Inclusivity.Exclusive, getNodeId(), Inclusivity.Inclusive, _fingers[i].getNodeId()) )
+            int fingerStart = getFingerStart(i + 1);
+            int correctedFingerStart = moduloFingerCorrection(fingerStart, getNodeId());
+            _logger.info(String.format("FINGER-CORRECTION [fingerStart = %d | correctedFingerStart = %s]", fingerStart, correctedFingerStart));
+
+            if( inRange(correctedFingerStart, Inclusivity.Exclusive, getNodeId(), Inclusivity.Inclusive, _fingers[i].getNodeId()) )
             {
                 String finger_iPlus1_NodeURL = _fingers[i].getNodeURL();
                 int finger_iPlus1_NodeID = _fingers[i].getNodeId();
@@ -202,7 +212,7 @@ public class Node implements INode {
                         i + 1, finger_iPlus1_NodeURL, finger_iPlus1_NodeID));
             }
             else {
-                String finger_iPlus1_NodeURL = nPrime.findPredecessor(getFingerStart(i + 1));
+                String finger_iPlus1_NodeURL = nPrime.findPredecessor(fingerStart);
                 INode finger_iPlus1_Node = getNode(finger_iPlus1_NodeURL);
                 _fingers[i + 1].setNodeURL(finger_iPlus1_NodeURL);
                 _fingers[i + 1].setNodeId(finger_iPlus1_Node.getNodeId());
@@ -218,7 +228,7 @@ public class Node implements INode {
         _logger.info("COMMAND");
         for(int i = 1; i <= _m; i++) {
             String predecessorURL = findPredecessor(
-                    Math.floorMod((int)(getNodeId() - Math.pow(2, i - 1) + 1), (int)Math.pow(2, _m) )
+                    Math.floorMod((int)(getNodeId() - Math.pow(2, i - 1) + 1), _modulo )
             );
             INode predecessor = getNode(predecessorURL);
             _logger.info(String.format("CURRENT-PREDECESSOR [predecessorURL = %s]", predecessorURL));
@@ -255,7 +265,7 @@ public class Node implements INode {
     public void insert(String word, String definition) throws RemoteException, MalformedURLException, NotBoundException {
         _logger.info(String.format("COMMAND [word = %s | definition = %s]", word, definition));
 
-        int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
+        int hash = FNV1aHash.hash32(word) % _modulo;
         _logger.info(String.format("HASH [hash32 = %d]", hash));
 
         String successorURL = findSuccessor(hash);
@@ -269,7 +279,7 @@ public class Node implements INode {
     public String lookup(String word) throws RemoteException, MalformedURLException, NotBoundException {
         _logger.info(String.format("COMMAND [word = %s]", word));
 
-        int hash = FNV1aHash.hash32(word) % (int)Math.pow(2, _m);
+        int hash = FNV1aHash.hash32(word) % _modulo;
         _logger.info(String.format("HASH [hash32 = %d]", hash));
 
         String successorURL = findSuccessor(hash);
@@ -321,7 +331,7 @@ public class Node implements INode {
 
     private int getFingerStart(int i) throws RemoteException {
         _logger.info(String.format("COMMAND [nodeID = %d | fingerIndex = %d]", getNodeId(), i));
-        int start = (_nodeId + (int)Math.pow(2, i - 1)) % (int)Math.pow(2, _m);
+        int start = (_nodeId + (int)Math.pow(2, i - 1)) % _modulo;
         _logger.info(String.format("RESPONSE [fingerStart = %d]", start));
         return start;
     }
@@ -330,10 +340,27 @@ public class Node implements INode {
                             Inclusivity lowerBoundInclusivity, int lowerBound,
                             Inclusivity upperBoundInclusivity, int upperBound)
     {
-        if(upperBound <= lowerBound) upperBound += Math.pow(2, _m);
+        if(upperBound <= lowerBound) upperBound += _modulo;
         boolean lowerPredicate = lowerBoundInclusivity == Inclusivity.Inclusive ? value >= lowerBound : value > lowerBound;
         boolean upperPredicate = upperBoundInclusivity == Inclusivity.Inclusive ? value <= upperBound : value < upperBound;
         return lowerPredicate && upperPredicate;
+    }
+
+    /* This is necessary to correct for finger wrap-around.
+     *
+     * Since we compute the `fingerStart` location using `nodeID + Math.pow(2, i-1)`, there is a real and likely scenario
+     * where the above formula could return a `fingerStart` that is larger than our modulo.
+     * If that is the case, then the computed `fingerStart` will be modded by the modulo, which is correct behavior for the `fingerTable`.
+     *
+     * This however is incorrect behavior when preforming range checks.
+     * Thus this method allows us to undo the modulo when preforming rang checks, thereby restoring correct functionality.
+     *
+     * This method is **only** used to correct a `fingerID`/`fingerStart` that is used as the **value** of a range-check.
+     */
+    private int moduloFingerCorrection(int fingerNodeID, int nodeID)
+    {
+        if (fingerNodeID < nodeID) return fingerNodeID + _modulo;
+        else return fingerNodeID;
     }
 
     private INode getNode(String nodeURL) throws RemoteException, NotBoundException, MalformedURLException {
