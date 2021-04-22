@@ -93,7 +93,9 @@ public class Node implements INode {
         String nPrimeSuccessorURL = nPrime.getSuccessorURL();
         INode nPrimeSuccessor = getNode(nPrimeSuccessorURL);
 
-        while ( !inRange(key, Inclusivity.Exclusive, nPrime.getNodeId(), Inclusivity.Inclusive, nPrimeSuccessor.getNodeId()) ) {
+        int newKey = moduloFingerCorrection(key, getNodeId());
+
+        while ( !inRange(newKey, Inclusivity.Exclusive, nPrime.getNodeId(), Inclusivity.Inclusive, nPrimeSuccessor.getNodeId()) ) {
 
             _logger.info(String.format("CURRENT-N-PRIME [nPrimeURL = %s]" , nPrimeURL));
             _logger.info(String.format("CURRENT-N-PRIME-SUCCESSOR [nPrimeSuccessorURL = %s]" , nPrimeSuccessorURL));
