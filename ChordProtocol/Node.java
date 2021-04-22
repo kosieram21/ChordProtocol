@@ -161,28 +161,44 @@ public class Node implements INode {
 
         String finger1NodeURL = nPrime.findSuccessor(getFingerStart(1));
         INode finger1Node = getNode(finger1NodeURL);
+        _logger.info(String.format("FINGER [finger1NodeURL = %s]", finger1NodeURL));
+
         _fingers[1].setNodeURL(finger1NodeURL);
         _fingers[1].setNodeId(finger1Node.getNodeId());
 
         setSuccessorURL(finger1NodeURL);
         String successorURL = getSuccessorURL();
         INode successor = getNode(successorURL);
+        _logger.info(String.format("GET-SUCCESSOR [successorURL = %s | successorID = %s]", successorURL, successor.getNodeId()));
+
         _predecessorURL = successor.getPredecessorURL();
         INode predecessor = getNode(_predecessorURL);
         successor.setPredecessorURL(_nodeURL);
         predecessor.setSuccessorURL(_nodeURL);
+        _logger.info(String.format("GET-PREDECESSOR [predecessorURL = %s | predecessorID = %s]", _predecessorURL, predecessor.getNodeId()));
 
         for(int i = 1; i < _m; i++) {
-            if( inRange(getFingerStart(i + 1), Inclusivity.Exclusive, getNodeId(), Inclusivity.Inclusive, _fingers[i + 1].getNodeId()) )
+            if( inRange(getFingerStart(i + 1), Inclusivity.Exclusive, getNodeId(), Inclusivity.Inclusive, _fingers[i].getNodeId()) )
             {
-                _fingers[i + 1].setNodeURL(_fingers[i].getNodeURL());
-                _fingers[i + 1].setNodeId(_fingers[i].getNodeId());
+                String finger_iPlus1_NodeURL = _fingers[i].getNodeURL();
+                int finger_iPlus1_NodeID = _fingers[i].getNodeId();
+
+                _fingers[i + 1].setNodeURL(finger_iPlus1_NodeURL);
+                _fingers[i + 1].setNodeId(finger_iPlus1_NodeID);
+
+                _logger.info(String.format(
+                        "UPDATE-FINGER [fingerID = %d | fingerID-Plus-1-URL = %s |  fingerID-Plus-1-ID = %s]",
+                        i, finger_iPlus1_NodeURL, finger_iPlus1_NodeID));
             }
             else {
                 String finger_iPlus1_NodeURL = nPrime.findPredecessor(getFingerStart(i + 1));
                 INode finger_iPlus1_Node = getNode(finger_iPlus1_NodeURL);
                 _fingers[i + 1].setNodeURL(finger_iPlus1_NodeURL);
                 _fingers[i + 1].setNodeId(finger_iPlus1_Node.getNodeId());
+
+                _logger.info(String.format(
+                        "UPDATE-FINGER [fingerID = %d | fingerID-Plus-1-URL = %s |  fingerID-Plus-1-ID = %s]",
+                        i, finger_iPlus1_NodeURL, finger_iPlus1_Node.getNodeId()));
             }
         }
     }
