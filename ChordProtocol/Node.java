@@ -320,7 +320,10 @@ public class Node implements INode {
         INode successor = getNode(successorURL);
 
         String definition;
-        if(successorURL.equals(_nodeURL)) definition = _dictionary.get(word);
+        if(successorURL.equals(_nodeURL))  {
+            if(!_dictionary.containsKey(word)) return "NOT-FOUND";
+            definition = _dictionary.get(word);
+        }
         else definition = successor.lookup(word);
 
         _logger.info(String.format("RESPONSE [definition = %s]", definition));

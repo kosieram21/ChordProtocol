@@ -1,7 +1,6 @@
 package ChordProtocol;
 
 import java.rmi.Naming;
-import java.util.List;
 import java.util.Scanner;
 
 public class Client {
@@ -14,10 +13,18 @@ public class Client {
 
         Scanner scanner = new Scanner(System.in);
         while(true) {
-            System.out.println("Enter word to lookup (type exit to escape): ");
-            String input = scanner.nextLine();
-            if(input.equals("exit")) break;
-            System.out.printf("Result: %s%n", node.lookup(input));
+            System.out.println("Enter 1 to lookup, 2 to exit");
+            System.out.print("Enter your choice: ");
+            String choice = scanner.nextLine();
+            if(choice.equals("1")) {
+                System.out.print("Enter a word: ");
+                String word = scanner.next();
+                System.out.printf("Result: %s%n", node.lookup(word));
+            }
+            else if(choice.equals("2")) {
+                System.out.print("Exiting....");
+                break;
+            }
         }
 
         /*for(int i = 1; i < args.length; i++) {
