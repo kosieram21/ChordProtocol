@@ -27,7 +27,7 @@ public class DictionaryLoader {
         List<String[]> definitions = new ArrayList<String[]>();
         while(scanner.hasNext()) {
             String line = scanner.nextLine();
-            String[] parts = line.split(" : ");
+            String[] parts = line.split("( *):( *)");
             definitions.add(parts);
         }
 
