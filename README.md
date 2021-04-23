@@ -14,7 +14,7 @@ You can clone and build this project using the following commands:
 The remaining sections assume that you are making calls from within the `bin` directory created during compilation
 
 # Creating Processes
-Bellow are instructions on how to create client/server processes.
+Bellow are instructions on how to create required processes.
 
 ## Node
 The following command can be used to create a node-process:
